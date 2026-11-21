@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="English">
+<meta name="theme-color" content="#f6f4ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)">
+<title>English Practice</title>
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1f2a37; --muted:#6b7280; --line:#e5e1d8;
+  --accent:#2457d6; --accent-soft:#e6edfd;
+  --ok:#157f4b; --ok-soft:#dff3e8; --bad:#b42318; --bad-soft:#fde7e4; --warn-soft:#fdf0d9;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#14171c; --card:#1d222a; --ink:#eef1f5; --muted:#9aa4b2; --line:#2e3540;
+    --accent:#7aa2ff; --accent-soft:#222e4d;
+    --ok:#4cc38a; --ok-soft:#173a2a; --bad:#ff8a7a; --bad-soft:#41201c; --warn-soft:#3d2d12;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.45;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+#app{max-width:640px;margin:0 auto;padding:18px 16px 60px}
+h1{font-size:26px;margin:6px 0 4px;letter-spacing:-.02em}
+h2{font-size:20px;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 18px}
+button{font:inherit}
+
+/* animations */
+@keyframes rise{from{opacity:0;transform:translateY(16px)}}
+@keyframes pop{40%{transform:scale(1.08)}}
+@keyframes shake{20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+@keyframes pulse{50%{transform:scale(1.35)}}
+@keyframes shine{to{background-position:100% 50%}}
+@keyframes float{50%{transform:translateY(-4px) rotate(-4deg)}}
+.pop{animation:pop .35s ease-out!important}
+.shake{animation:shake .35s ease-out!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* home */
+.hero{margin:4px 0 18px}
+.hero h1{font-size:32px;letter-spacing:-.03em;background:linear-gradient(90deg,#2457d6,#8b5cf6,#ec4899,#f97316,#2457d6);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 8s linear infinite alternate}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px}
+.grid .card{margin:0}
+.mode{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;text-align:left;cursor:pointer;color:inherit;padding:16px;
+  animation:rise .45s both;animation-delay:calc(var(--d,0)*70ms);transition:transform .15s,border-color .15s,box-shadow .15s}
+.mode:hover{border-color:var(--c);box-shadow:0 6px 20px -10px var(--c);transform:translateY(-2px)}
+.mode:active{transform:scale(.97)}
+.ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;background:var(--accent-soft);background:color-mix(in srgb,var(--c) 18%,transparent)}
+.mode:hover .ic{animation:float 1s ease-in-out infinite}
+.mode .big{font-size:16px;font-weight:700;line-height:1.25}
+.mode .desc{color:var(--muted);font-size:13px;line-height:1.35}
+.mode .best{font-size:12.5px;font-weight:700;color:var(--c)}
+.mhead{display:flex;align-items:center;gap:12px;margin:4px 0 6px}
+.mhead h1{margin:0}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.back{background:none;border:none;color:var(--accent);font-weight:600;cursor:pointer;padding:6px 0}
+.pill{font-size:13px;color:var(--muted);font-weight:600;display:flex;gap:8px;align-items:center}
+.streak{display:inline-block;color:#f97316;font-weight:800}
+.streak.bump{animation:pulse .4s}
+.bar{height:7px;border-radius:99px;background:var(--line);overflow:hidden;margin-bottom:16px}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#8b5cf6,#ec4899);transition:width .35s cubic-bezier(.3,1.4,.5,1)}
+.sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 16px 4px;margin:0 -16px 10px}
+.sticky .top{margin-bottom:6px}.sticky .bar{margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 14px;border-radius:99px;font-size:14px;cursor:pointer;transition:background .15s}
+.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:3px 9px;border-radius:99px}
+.hint{color:var(--muted);font-size:14px;margin:0 0 14px}
+.primary{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(90deg,var(--accent),#8b5cf6);color:#fff;font-weight:700;font-size:16px;cursor:pointer;margin-top:4px;transition:transform .12s}
+.primary:active,.secondary:active{transform:scale(.98)}
+.secondary{width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;cursor:pointer;margin-top:8px}
+
+/* exercise cards */
+.card.c{padding:14px;margin-bottom:12px;animation:rise .4s both;animation-delay:calc(var(--d,0)*50ms);transition:border-color .25s}
+.card.c.done-ok{border-color:var(--ok)}
+.card.c.done-bad{border-color:var(--bad)}
+.vhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.verb{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.row{border:1.5px solid var(--line);border-radius:12px;padding:10px;margin-bottom:8px;transition:background .2s,border-color .2s}
+.row .sent{font-size:16px;margin-bottom:8px}
+.row .btns{display:flex;gap:8px}
+.mk{flex:1;padding:8px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;font-weight:600;cursor:pointer}
+.mk.sel{border-color:currentColor}
+.row.right{border-color:var(--ok);background:var(--ok-soft)}
+.row.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.row .res{margin-top:6px;font-size:13.5px;font-weight:600}
+.row.right .res{color:var(--ok)}.row.wrong .res{color:var(--bad)}
+.mk:disabled{cursor:default}
+.q{font-size:19px;line-height:1.45;margin:0 0 12px}
+.blank{display:inline-block;min-width:70px;border-bottom:3px solid var(--accent);text-align:center;font-weight:700;color:var(--accent);padding:0 6px;transition:color .2s}
+.blank.ok{border-color:var(--ok);color:var(--ok)}.blank.bad{border-color:var(--bad);color:var(--bad)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{padding:11px 8px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:16px;font-weight:600;cursor:pointer;transition:transform .1s}
+.opt:active{transform:scale(.96)}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.opt:disabled{cursor:default}
+.wordrow{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.word{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.say{border:none;background:var(--accent-soft);color:var(--accent);border-radius:99px;width:38px;height:38px;font-size:17px;cursor:pointer;flex:none}
+.say.sm{width:30px;height:30px;font-size:14px;float:right;margin:-2px 0 4px 8px}
+.fb{margin-top:10px;padding:11px 12px;border-radius:12px;font-size:14px;animation:rise .3s both}
+.fb.ok{background:var(--ok-soft)}.fb.bad{background:var(--bad-soft)}
+.fb b.t{display:block;margin-bottom:3px;color:var(--bad)}
+.note{margin-top:8px;padding:9px 11px;background:var(--warn-soft);border-radius:10px;font-size:13.5px;clear:both}
+details{margin:0 0 14px}
+summary{cursor:pointer;font-weight:700;color:var(--accent);padding:8px 0}
+.ref{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 14px 12px;font-size:14.5px}
+.ref h3{font-size:14px;margin:12px 0 4px}
+.ref p{margin:2px 0}
+.ref code{background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:6px;font-size:13.5px}
+.score{font-size:60px;font-weight:800;text-align:center;margin:6px 0 0;letter-spacing:-.03em;animation:pop .6s}
+.center{text-align:center}
+.miss{font-size:14.5px;margin:6px 0;padding:10px 12px;border-radius:10px;background:var(--bad-soft)}
+
+/* hunt */
+.target{text-align:center;background:linear-gradient(135deg,color-mix(in srgb,#f97316 14%,var(--card)),var(--card))}
+.tlabel{color:var(--muted);font-size:14px}
+.tbig{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:2px 0 6px}
+.tbig small{font-size:15px;font-weight:600;color:var(--muted)}
+.tcount{font-size:14px;font-weight:600}
+.hunt{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-bottom:16px}
+.hv{padding:10px 15px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-weight:600;font-size:16px;cursor:pointer;line-height:1.2;
+  animation:rise .4s both;animation-delay:calc(var(--d,0)*35ms)}
+.hv:active{transform:scale(.95)}
+.hv.got{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.hv.miss{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.hv.rest{opacity:.5}
+.hv small{display:block;font-size:11px;font-weight:700;opacity:.85;margin-top:2px}
+.hv:disabled{cursor:default}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:99}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------- DATA: Mode 1 — verbs + gerund / infinitive ---------- */
+/* type: ger = solo gerundio | inf = solo infinitivo | both = ambos (mismo significado) | diff = ambos (distinto significado) */
+const VERBS = [
+ // gerund only
+ {v:'enjoy', t:'ger', g:'She enjoys cooking for her family.', i:'She enjoys to cook for her family.', gOk:1, iOk:0, e:'Después de enjoy siempre va gerundio (verbo + -ing).'},
+ {v:'avoid', t:'ger', g:'He avoids driving at night.', i:'He avoids to drive at night.', gOk:1, iOk:0, e:'Avoid + gerundio. Nunca "avoid to".'},
+ {v:'finish', t:'ger', g:'We finished testing the samples.', i:'We finished to test the samples.', gOk:1, iOk:0, e:'Finish + gerundio.'},
+ {v:'suggest', t:'ger', g:'I suggest taking a taxi.', i:'I suggest to take a taxi.', gOk:1, iOk:0, e:'Suggest + gerundio (o "suggest that you take").'},
+ {v:'mind', t:'ger', g:'Do you mind opening the window?', i:'Do you mind to open the window?', gOk:1, iOk:0, e:'Mind + gerundio: "¿te molesta abrir...?".'},
+ {v:'consider', t:'ger', g:'They are considering moving to Valparaiso.', i:'They are considering to move to Valparaiso.', gOk:1, iOk:0, e:'Consider + gerundio.'},
+ {v:'practice', t:'ger', g:'He practices speaking English every day.', i:'He practices to speak English every day.', gOk:1, iOk:0, e:'Practice + gerundio.'},
+ {v:'miss', t:'ger', g:'I miss living near the beach.', i:'I miss to live near the beach.', gOk:1, iOk:0, e:'Miss + gerundio.'},
+ {v:'keep', t:'ger', g:'She kept working until midnight.', i:'She kept to work until midnight.', gOk:1, iOk:0, e:'Keep + gerundio = "seguir haciendo algo".'},
+ {v:'postpone', t:'ger', g:'They postponed launching the product.', i:'They postponed to launch the product.', gOk:1, iOk:0, e:'Postpone + gerundio.'},
+ {v:'deny', t:'ger', g:'He denied taking the money.', i:'He denied to take the money.', gOk:1, iOk:0, e:'Deny + gerundio.'},
+ {v:'admit', t:'ger', g:'She admitted making a mistake.', i:'She admitted to make a mistake.', gOk:1, iOk:0, e:'Admit + gerundio.'},
+ {v:'risk', t:'ger', g:'You risk losing your job.', i:'You risk to lose your job.', gOk:1, iOk:0, e:'Risk + gerundio.'},
+ {v:'imagine', t:'ger', g:'Imagine living on Mars.', i:'Imagine to live on Mars.', gOk:1, iOk:0, e:'Imagine + gerundio.'},
+ {v:'recommend', t:'ger', g:'I recommend reading this book.', i:'I recommend to read this book.', gOk:1, iOk:0, e:'Recommend + gerundio. Con persona: "recommend that you read" o "recommend you read".'},
+ // infinitive only
+ {v:'want', t:'inf', g:'I want learning French.', i:'I want to learn French.', gOk:0, iOk:1, e:'Want + to + verbo (infinitivo).'},
+ {v:'decide', t:'inf', g:'She decided changing jobs.', i:'She decided to change jobs.', gOk:0, iOk:1, e:'Decide + infinitivo.'},
+ {v:'hope', t:'inf', g:'We hope seeing you soon.', i:'We hope to see you soon.', gOk:0, iOk:1, e:'Hope + infinitivo.'},
+ {v:'plan', t:'inf', g:'They plan opening a new lab.', i:'They plan to open a new lab.', gOk:0, iOk:1, e:'Plan + infinitivo.'},
+ {v:'agree', t:'inf', g:'He agreed helping us.', i:'He agreed to help us.', gOk:0, iOk:1, e:'Agree + infinitivo.'},
+ {v:'refuse', t:'inf', g:'She refused signing the contract.', i:'She refused to sign the contract.', gOk:0, iOk:1, e:'Refuse + infinitivo.'},
+ {v:'promise', t:'inf', g:'I promise calling you.', i:'I promise to call you.', gOk:0, iOk:1, e:'Promise + infinitivo.'},
+ {v:'afford', t:'inf', g:"We can't afford buying a house.", i:"We can't afford to buy a house.", gOk:0, iOk:1, e:'Afford + infinitivo.'},
+ {v:'manage', t:'inf', g:'He managed fixing the machine.', i:'He managed to fix the machine.', gOk:0, iOk:1, e:'Manage + infinitivo = "lograr hacer algo".'},
+ {v:'need', t:'inf', g:'You need resting.', i:'You need to rest.', gOk:0, iOk:1, e:'Need + infinitivo. (Con sentido pasivo existe "The car needs washing", pero aquí no aplica.)'},
+ {v:'expect', t:'inf', g:'I expect finishing by Friday.', i:'I expect to finish by Friday.', gOk:0, iOk:1, e:'Expect + infinitivo.'},
+ {v:'fail', t:'inf', g:'He failed meeting the deadline.', i:'He failed to meet the deadline.', gOk:0, iOk:1, e:'Fail + infinitivo.'},
+ {v:'learn', t:'inf', g:'Children learn walking at one year old.', i:'Children learn to walk at one year old.', gOk:0, iOk:1, e:'Learn + infinitivo cuando es "aprender a hacer algo".'},
+ {v:'offer', t:'inf', g:'They offered paying for dinner.', i:'They offered to pay for dinner.', gOk:0, iOk:1, e:'Offer + infinitivo.'},
+ {v:'pretend', t:'inf', g:'He pretended being asleep.', i:'He pretended to be asleep.', gOk:0, iOk:1, e:'Pretend + infinitivo.'},
+ {v:'deserve', t:'inf', g:'You deserve winning.', i:'You deserve to win.', gOk:0, iOk:1, e:'Deserve + infinitivo.'},
+ // both, same meaning
+ {v:'like', t:'both', g:'I like reading at night.', i:'I like to read at night.', gOk:1, iOk:1, e:'Ambas son correctas y casi significan lo mismo.'},
+ {v:'love', t:'both', g:'She loves dancing.', i:'She loves to dance.', gOk:1, iOk:1, e:'Ambas correctas, mismo significado.'},
+ {v:'hate', t:'both', g:'I hate waiting in line.', i:'I hate to wait in line.', gOk:1, iOk:1, e:'Ambas correctas, mismo significado.'},
+ {v:'prefer', t:'both', g:'He prefers walking to work.', i:'He prefers to walk to work.', gOk:1, iOk:1, e:'Ambas correctas. Con "than/rather" se prefiere la forma "prefer to... rather than...".'},
+ {v:'start', t:'both', g:'It started raining.', i:'It started to rain.', gOk:1, iOk:1, e:'Ambas correctas. Si "start" ya va en -ing, mejor usar infinitivo: "It is starting to rain".'},
+ {v:'continue', t:'both', g:'He continued working.', i:'He continued to work.', gOk:1, iOk:1, e:'Ambas correctas, mismo significado.'},
+ // both, different meaning
+ {v:'remember', t:'diff', g:'I remember locking the door last night.', i:'Remember to lock the door tonight.', gOk:1, iOk:1, e:'Las dos son correctas, pero cambian el significado.', n:'<b>remember + -ing</b> = recordar algo que ya hiciste.<br><b>remember + to</b> = acordarte de hacer algo (todavía por hacer).'},
+ {v:'forget', t:'diff', g:"I'll never forget meeting you.", i:"Don't forget to send the email.", gOk:1, iOk:1, e:'Las dos son correctas, pero cambian el significado.', n:'<b>forget + -ing</b> = olvidar algo que ya pasó.<br><b>forget + to</b> = olvidarse de hacer algo.'},
+ {v:'stop', t:'diff', g:'He stopped smoking.', i:'He stopped to smoke.', gOk:1, iOk:1, e:'Las dos son correctas, pero cambian el significado.', n:'<b>stop + -ing</b> = dejar de hacer algo.<br><b>stop + to</b> = detenerse para hacer algo.'},
+ {v:'try', t:'diff', g:'Try adding more salt.', i:'Try to arrive early.', gOk:1, iOk:1, e:'Las dos son correctas, pero cambian el significado.', n:'<b>try + -ing</b> = probar/experimentar algo.<br><b>try + to</b> = intentar, hacer un esfuerzo.'},
+ {v:'regret', t:'diff', g:'I regret saying that.', i:'I regret to inform you that the flight is cancelled.', gOk:1, iOk:1, e:'Las dos son correctas, pero cambian el significado.', n:'<b>regret + -ing</b> = arrepentirse de algo que hiciste.<br><b>regret + to</b> = lamentar tener que dar una noticia (formal).'}
+];
+
+/* ---------- DATA: Mode 2 — who / whom / which / whose ---------- */
+const W4 = ['who','whom','which','whose'];
+const WQ = [
+ {s:'The woman ___ lives next door is a doctor.', o:W4, a:'who', e:'Persona que hace la acción (sujeto de "lives") → <b>who</b>.'},
+ {s:'The book ___ I bought yesterday is great.', o:W4, a:'which', e:'Es una cosa → <b>which</b>.'},
+ {s:'The student ___ bike was stolen called the police.', o:W4, a:'whose', e:'Posesión (la bici del estudiante) → <b>whose</b>.'},
+ {s:'The man to ___ I spoke was very kind.', o:W4, a:'whom', e:'Después de preposición (to) y hablando de personas → <b>whom</b>.'},
+ {s:'This is the car ___ engine is broken.', o:W4, a:'whose', e:'"Cuyo motor" → posesión → <b>whose</b>. Funciona también con cosas.'},
+ {s:'She is the singer ___ won the award last year.', o:W4, a:'who', e:'Persona + sujeto del verbo "won" → <b>who</b>.'},
+ {s:'The colleague with ___ I share an office is Chilean.', o:W4, a:'whom', e:'Preposición (with) + persona → <b>whom</b>.'},
+ {s:'I have a friend ___ parents own a vineyard.', o:W4, a:'whose', e:'Los padres de mi amigo → posesión → <b>whose</b>.'},
+ {s:'The laptop, ___ cost $1,500, stopped working.', o:W4, a:'which', e:'Cosa, con comas (información extra) → <b>which</b>.'},
+ {s:'___ car is parked outside?', o:['Who','Whom','Which','Whose'], a:'Whose', e:'Pregunta por el dueño: "¿de quién es el auto?" → <b>Whose</b>.'},
+ {s:'To ___ did you give the keys?', o:W4, a:'whom', e:'Preposición (to) + persona → <b>whom</b>.'},
+ {s:'___ of these two shirts do you prefer?', o:['Who','Whom','Which','Whose'], a:'Which', e:'Elegir entre opciones limitadas → <b>Which</b>.'},
+ {s:'___ wrote "Don Quixote"?', o:['Who','Whom','Which','Whose'], a:'Who', e:'Pregunta por el sujeto (persona) → <b>Who</b>.'},
+ {s:'Mr. Smith, ___ is my neighbor, works at a bank.', o:W4, a:'who', e:'Persona + sujeto → <b>who</b>.'},
+ {s:'The people ___ I met at the conference were interesting.', o:['whom','which','whose','where'], a:'whom', e:'Persona que es objeto de "met" → <b>whom</b> (en inglés informal también se oye "who").'},
+ {s:'The house ___ roof was damaged is being repaired.', o:W4, a:'whose', e:'El techo de la casa → posesión → <b>whose</b>.'},
+ {s:'Chile, ___ capital is Santiago, is long and narrow.', o:W4, a:'whose', e:'La capital de Chile → posesión → <b>whose</b>.'},
+ {s:'The report, ___ I finished last night, is on your desk.', o:W4, a:'which', e:'Cosa, con comas → <b>which</b>.'},
+ {s:'He is the engineer ___ designed the bridge.', o:W4, a:'who', e:'Persona + sujeto de "designed" → <b>who</b>.'},
+ {s:'The teacher ___ class I enjoyed most retired.', o:W4, a:'whose', e:'La clase del profesor → <b>whose</b>.'},
+ {s:"I don't know ___ phone this is.", o:W4, a:'whose', e:'"No sé de quién es este teléfono" → <b>whose</b>.'},
+ {s:'The company for ___ she works is based in Chile.', o:W4, a:'which', e:'Una empresa es una cosa, no una persona → <b>for which</b>. (Para personas sería "for whom".)'},
+ {s:'Everyone ___ attended the meeting received a certificate.', o:W4, a:'who', e:'Personas + sujeto → <b>who</b>.'},
+ {s:'The lab in ___ we test the samples is on the second floor.', o:W4, a:'which', e:'Preposición (in) + cosa → <b>in which</b>.'},
+ {s:'A chemist is a person ___ studies chemicals.', o:W4, a:'who', e:'Persona + sujeto → <b>who</b>.'},
+ {s:'A solvent is a substance ___ dissolves other substances.', o:W4, a:'which', e:'Sustancia = cosa → <b>which</b>.'},
+ {s:'The girl to ___ I gave the book smiled.', o:W4, a:'whom', e:'Preposición (to) + persona → <b>whom</b>.'},
+ {s:'The film ___ we watched last night was boring.', o:W4, a:'which', e:'Cosa → <b>which</b>.'},
+ {s:"That's the woman ___ husband is a pilot.", o:W4, a:'whose', e:'El esposo de la mujer → <b>whose</b>.'},
+ {s:'With ___ are you traveling?', o:W4, a:'whom', e:'Preposición (with) + persona → <b>whom</b>.'},
+ {s:'___ is responsible for this mistake?', o:['Who','Whom','Which','Whose'], a:'Who', e:'Pregunta por el sujeto (persona) → <b>Who</b>.'},
+ {s:'The boy ___ I helped thanked me.', o:['whom','which','whose','where'], a:'whom', e:'Persona que es objeto de "helped" → <b>whom</b> (informalmente "who").'},
+ {s:'The email ___ you sent me has no attachment.', o:W4, a:'which', e:'Cosa → <b>which</b>.'}
+];
+
+/* ---------- DATA: Mode 3 — if clauses (conditionals) ---------- */
+const E0 = 'Zero conditional (condicional cero): if + presente, presente → verdades generales y hechos que siempre se cumplen.';
+const E1 = 'First conditional (primer condicional): if + presente, will + verbo → situación real y posible en el futuro.';
+const E2 = 'Second conditional (segundo condicional): if + pasado, would + verbo → situación irreal o poco probable en el presente.';
+const E3 = 'Third conditional (tercer condicional): if + past perfect (pasado perfecto), would have + participio → algo que no pasó en el pasado y ya no se puede cambiar.';
+const EM = 'Mixed conditional (condicional mixto): mezcla tiempos. Aquí la condición está en el pasado (if + past perfect) y el resultado en el presente (would + verbo).';
+const CLQ = [
+ // third
+ {s:'If I ___ harder, I would have passed the exam.', o:['had studied','studied','would study','have studied'], a:'had studied', e:E3+' Después de "if" va <b>had studied</b>, no "would".'},
+ {s:'If you had called me, I ___ you.', o:['would have helped','would help','will help','had helped'], a:'would have helped', e:E3+' En el resultado: <b>would have helped</b>.'},
+ {s:"If they hadn't missed the flight, they ___ on time.", o:['would have arrived','would arrive','had arrived','will arrive'], a:'would have arrived', e:E3},
+ {s:"If she ___ the instructions, she wouldn't have made the mistake.", o:['had read','read','would read','has read'], a:'had read', e:E3+' La parte con "if" lleva <b>had + participio</b>.'},
+ {s:'We would have won the game if we ___ more carefully.', o:['had played','played','would play','were playing'], a:'had played', e:E3+' El orden puede invertirse: el "if" también puede ir al final.'},
+ {s:"If it hadn't rained, we ___ to the beach.", o:['would have gone','would go','went','will go'], a:'would have gone', e:E3},
+ {s:'If I had known about the problem, I ___ it earlier.', o:['would have fixed','would fix','had fixed','fixed'], a:'would have fixed', e:E3},
+ {s:"If you ___ me the truth, I wouldn't have been angry.", o:['had told','told','would tell','have told'], a:'had told', e:E3},
+ {s:"He wouldn't have got lost if he ___ a map.", o:['had taken','took','would take','has taken'], a:'had taken', e:E3},
+ {s:'If the lab ___ the samples sooner, we would have finished on time.', o:['had received','received','would receive','has received'], a:'had received', e:E3},
+ {s:'What would you have done if you ___ in my place?', o:['had been','were','would be','have been'], a:'had been', e:E3},
+ {s:'If I had left earlier, I ___ the traffic.', o:['would have avoided','would avoid','will avoid','avoided'], a:'would have avoided', e:E3},
+ // second
+ {s:'If I ___ more money, I would buy a bigger house.', o:['had','have','would have','will have'], a:'had', e:E2+' Después de "if" va pasado simple: <b>had</b>.'},
+ {s:'If she were taller, she ___ basketball professionally.', o:['would play','will play','would have played','played'], a:'would play', e:E2},
+ {s:'If I ___ you, I would apologize.', o:['were','am','would be','had been'], a:'were', e:E2+' Con "if" se usa <b>were</b> para todas las personas (If I were you...).'},
+ {s:'What would you do if you ___ the lottery?', o:['won','win','would win','had won'], a:'won', e:E2},
+ {s:'If we lived in Valparaiso, we ___ the sea every day.', o:['would see','will see','would have seen','saw'], a:'would see', e:E2},
+ // first
+ {s:'If it rains tomorrow, we ___ at home.', o:['will stay','would stay','would have stayed','stayed'], a:'will stay', e:E1},
+ {s:"If you don't hurry, you ___ the bus.", o:['will miss','would miss','would have missed','missed'], a:'will miss', e:E1},
+ {s:'If she ___ the job, she will move to Santiago.', o:['gets','got','had got','would get'], a:'gets', e:E1+' Después de "if" NO se usa "will": va presente simple (<b>gets</b>).'},
+ {s:'If I see him, I ___ him your message.', o:['will give','would give','would have given','gave'], a:'will give', e:E1},
+ // zero
+ {s:'If you heat ice, it ___.', o:['melts','would melt','had melted','would have melted'], a:'melts', e:E0},
+ {s:'If you mix red and blue, you ___ purple.', o:['get','would get','had got','would have got'], a:'get', e:E0},
+ {s:'Plants die if they ___ enough water.', o:["don't get","didn't get","hadn't got","wouldn't get"], a:"don't get", e:E0},
+ // mixed
+ {s:'If I had studied medicine, I ___ a doctor now.', o:['would be','would have been','will be','had been'], a:'would be', e:EM+' "Now" indica resultado en el presente: <b>would be</b>.'},
+ {s:'If he had taken the job in Germany, he ___ German now.', o:['would speak','would have spoken','will speak','had spoken'], a:'would speak', e:EM},
+ {s:'If you ___ my advice last year, you would be happier now.', o:['had taken','took','would take','take'], a:'had taken', e:EM+' La condición es pasada (last year): <b>had taken</b>.'}
+];
+
+
+/* ---------- DATA: If clauses — nivel avanzado ---------- */
+const EINV = 'Inversion (inversión): en inglés formal se quita "if" y se invierte el orden. <b>Had I known</b> = If I had known · <b>Were I</b> = If I were · <b>Should you</b> = If you should.';
+const EUNL = '<b>unless</b> = if not (a menos que). Ojo: después de unless el verbo va en <b>afirmativo</b>.';
+const EPROV = '<b>as long as / provided (that)</b> = siempre que, con tal de que. Como en el first conditional, van con presente aunque hablen del futuro.';
+const EBUT = '<b>But for</b> + sustantivo = If it hadn\'t been for (de no ser por).';
+const EOTH = '<b>Otherwise</b> = si no, de lo contrario. Reemplaza toda la condición.';
+const EWISH = '<b>wish / if only</b>: + pasado = deseo sobre el presente · + had + participio = arrepentimiento sobre el pasado.';
+const CLQ2 = [
+ {s:'___ I known about the meeting, I would have attended.', o:['Had','If','Have','Would'], a:'Had', e:EINV},
+ {s:'___ I in your position, I would accept the offer.', o:['Were','Was','Am','Had'], a:'Were', e:EINV},
+ {s:'___ you need any help, please call me.', o:['Should','Would','Had','Will'], a:'Should', e:EINV+' Es un first conditional formal.'},
+ {s:'___ the weather been better, we would have stayed longer.', o:['Had','If','Would','Was'], a:'Had', e:EINV},
+ {s:"If I hadn't been driving so fast, I ___ the accident.", o:['would have avoided','would avoid','had avoided','will avoid'], a:'would have avoided', e:E3+' Aquí la condición va en past perfect continuous (had been + -ing).'},
+ {s:'If I were more organized, I ___ the deadline last week.', o:['would have met','would meet','will meet','meet'], a:'would have met', e:'Mixed conditional al revés: condición en el presente (soy desordenado en general) y resultado en el pasado (last week) → <b>would have met</b>.'},
+ {s:'If I ___ English fluently, I would have got that job last year.', o:['spoke','speak','would speak','will speak'], a:'spoke', e:'Mixed conditional: una situación general del presente (no hablo fluido) explica un resultado pasado → if + pasado, would have + participio.'},
+ {s:'You can borrow my car ___ you bring it back by six.', o:['as long as','unless','otherwise','in case'], a:'as long as', e:EPROV},
+ {s:'Provided that the results ___ positive, we will launch the product.', o:['are','will be','would be','were'], a:'are', e:EPROV},
+ {s:"We won't start the meeting ___ everyone is here.", o:['unless','if','as long as','otherwise'], a:'unless', e:EUNL},
+ {s:"Unless you ___, you'll be late.", o:['hurry',"don't hurry",'will hurry','hurried'], a:'hurry', e:EUNL+' "Unless you don\'t hurry" sería una doble negación.'},
+ {s:'___ your help, I would have failed.', o:['But for','Unless','If not','Except'], a:'But for', e:EBUT},
+ {s:"If it ___ for the traffic, we would have arrived on time.", o:["hadn't been","wasn't","wouldn't be","isn't"], a:"hadn't been", e:'<b>If it hadn\'t been for</b> + sustantivo = de no ser por (pasado).'},
+ {s:"If it ___ for your support, I wouldn't be here today.", o:["weren't","isn't","wouldn't be","won't be"], a:"weren't", e:'<b>If it weren\'t for</b> + sustantivo = de no ser por (presente).'},
+ {s:"I'm glad I took the umbrella. ___, I would have got wet.", o:['Otherwise','Unless','Provided','If'], a:'Otherwise', e:EOTH},
+ {s:'If the samples had been stored correctly, they ___ contaminated last month.', o:["wouldn't have been","wouldn't be","hadn't been","won't be"], a:"wouldn't have been", e:E3+' Versión pasiva: would have <b>been</b> + participio.'},
+ {s:'If you ___ me earlier, I could have helped you.', o:['had told','told','would tell','have told'], a:'had told', e:E3+' <b>could have</b> / <b>might have</b> reemplazan a would have para hablar de posibilidad.'},
+ {s:'If I had taken the job, I ___ in London now.', o:['would be living','would have lived','will live','had lived'], a:'would be living', e:EM+' Versión continua: would be + -ing.'},
+ {s:'If she had listened to her doctor, she ___ healthier now.', o:['would be','would have been','will be','is'], a:'would be', e:EM+' "Now" indica resultado presente.'},
+ {s:'I wish I ___ more time to study.', o:['had','have','would have','will have'], a:'had', e:EWISH},
+ {s:'I wish I ___ to the party last night.', o:['had gone','went','would go','have gone'], a:'had gone', e:EWISH},
+ {s:'If only you ___ me the truth from the beginning!', o:['had told','told','would tell','tell'], a:'had told', e:EWISH},
+ {s:'Suppose you ___ the lottery, what would you do?', o:['won','win','had won','will win'], a:'won', e:'<b>Suppose / Imagine</b> funcionan como "if". Con would → second conditional (pasado).'},
+ {s:'If I ___ you were coming, I would have baked a cake.', o:['had known','knew','would know','have known'], a:'had known', e:E3},
+ {s:'They would have finished the project if the supplier ___ on time.', o:['had delivered','delivered','would deliver','has delivered'], a:'had delivered', e:E3},
+ {s:'Take an umbrella in case it ___.', o:['rains','will rain','would rain','rained'], a:'rains', e:'<b>in case</b> = por si acaso. Va con presente, nunca con will.'}
+];
+
+/* ---------- DATA: Prepositions ---------- */
+const PREP = [
+ // tiempo
+ {c:'t', s:'The meeting is ___ Monday.', o:['on','in','at','by'], a:'on', e:'<b>on</b> + días y fechas: on Monday, on May 5th.'},
+ {c:'t', s:'I was born ___ 1985.', o:['in','on','at','since'], a:'in', e:'<b>in</b> + años, meses y estaciones: in 1985, in July, in winter.'},
+ {c:'t', s:"The class starts ___ 8 o'clock.", o:['at','in','on','for'], a:'at', e:'<b>at</b> + horas exactas: at 8 o\'clock, at noon, at midnight.'},
+ {c:'t', s:'We usually go to the beach ___ summer.', o:['in','on','at','for'], a:'in', e:'<b>in</b> + estaciones: in summer, in winter.'},
+ {c:'t', s:'I always drink coffee ___ the morning.', o:['in','on','at','by'], a:'in', e:'in the morning / in the afternoon / in the evening… pero <b>at night</b>.'},
+ {c:'t', s:'He works ___ night.', o:['at','in','on','for'], a:'at', e:'Se dice <b>at night</b> (la excepción a "in the morning").'},
+ {c:'t', s:"I'll see you ___ Christmas Day.", o:['on','in','at','by'], a:'on', e:'Día específico → <b>on</b> Christmas Day. (Pero <b>at</b> Christmas = en la época navideña.)'},
+ {c:'t', s:'I have lived here ___ 2019.', o:['since','for','from','during'], a:'since', e:'<b>since</b> + punto de inicio: since 2019, since Monday.'},
+ {c:'t', s:'I have lived here ___ five years.', o:['for','since','during','from'], a:'for', e:'<b>for</b> + duración: for five years, for two hours.'},
+ {c:'t', s:'Please send me the report ___ Friday at the latest.', o:['by','until','since','in'], a:'by', e:'<b>by</b> = a más tardar (un plazo).'},
+ {c:'t', s:'I will wait here ___ you come back.', o:['until','by','since','for'], a:'until', e:'<b>until</b> = hasta (la acción sigue hasta ese momento).'},
+ {c:'t', s:'The bus leaves ___ ten minutes.', o:['in','by','on','at'], a:'in', e:'<b>in</b> + tiempo = dentro de: in ten minutes.'},
+ {c:'t', s:'I fell asleep ___ the movie.', o:['during','for','while','since'], a:'during', e:'<b>during</b> + sustantivo (durante). <b>While</b> va con verbo: while I was watching.'},
+ {c:'t', s:'The shop is closed ___ Sundays.', o:['on','in','at','by'], a:'on', e:'Días → <b>on</b>: on Sundays.'},
+ // lugar
+ {c:'p', s:'The keys are ___ the table.', o:['on','in','at','to'], a:'on', e:'<b>on</b> = sobre una superficie.'},
+ {c:'p', s:'She lives ___ Santiago.', o:['in','at','on','to'], a:'in', e:'<b>in</b> + ciudades y países.'},
+ {c:'p', s:"I'll meet you ___ the bus stop.", o:['at','in','on','to'], a:'at', e:'<b>at</b> + un punto específico: at the bus stop, at the door, at the corner.'},
+ {c:'p', s:'There is a picture ___ the wall.', o:['on','in','at','to'], a:'on', e:'Algo pegado o colgado en una superficie → <b>on</b> the wall.'},
+ {c:'p', s:'We arrived ___ the airport two hours early.', o:['at','in','to','on'], a:'at', e:'arrive <b>at</b> + lugar puntual (airport, station) · arrive <b>in</b> + ciudad o país. Nunca "arrive to".'},
+ {c:'p', s:'We arrived ___ London at midnight.', o:['in','at','to','on'], a:'in', e:'arrive <b>in</b> + ciudad o país.'},
+ {c:'p', s:'My office is ___ the third floor.', o:['on','in','at','to'], a:'on', e:'Pisos de un edificio → <b>on</b> the third floor.'},
+ {c:'p', s:"Get ___ the car, we're leaving!", o:['in','on','at','to'], a:'in', e:'Autos y taxis → <b>in</b>. Buses, trenes y aviones → <b>on</b>.'},
+ {c:'p', s:'Hurry up, get ___ the bus!', o:['on','in','at','to'], a:'on', e:'Buses, trenes y aviones → <b>on</b>.'},
+ {c:'p', s:'The cat is sleeping ___ the sofa and the wall.', o:['between','among','in','at'], a:'between', e:'<b>between</b> = entre dos cosas · <b>among</b> = entre varias.'},
+ {c:'p', s:'He walked ___ the room and sat down.', o:['into','at','on','to'], a:'into', e:'<b>into</b> = movimiento hacia adentro.'},
+ {c:'p', s:'I live ___ 25 Main Street.', o:['at','on','in','to'], a:'at', e:'Dirección con número → <b>at</b>. Solo la calle → <b>on</b> Main Street.'},
+ // verbo / adjetivo + preposición
+ {c:'d', s:'She is very interested ___ art.', o:['in','on','at','about'], a:'in', e:'interested <b>in</b>.'},
+ {c:'d', s:'He is really good ___ math.', o:['at','in','on','for'], a:'at', e:'good / bad <b>at</b> + actividad.'},
+ {c:'d', s:'Are you afraid ___ spiders?', o:['of','from','to','about'], a:'of', e:'afraid / scared <b>of</b>.'},
+ {c:'d', s:'It depends ___ the weather.', o:['on','of','from','in'], a:'on', e:'depend <b>on</b> (no "depend of").'},
+ {c:'d', s:'Who is responsible ___ this project?', o:['for','of','to','with'], a:'for', e:'responsible <b>for</b>.'},
+ {c:'d', s:'She is married ___ a doctor.', o:['to','with','for','at'], a:'to', e:'married <b>to</b> (no "married with").'},
+ {c:'d', s:'I am proud ___ my team.', o:['of','for','about','with'], a:'of', e:'proud <b>of</b>.'},
+ {c:'d', s:"Don't worry ___ it.", o:['about','for','of','on'], a:'about', e:'worry <b>about</b>.'},
+ {c:'d', s:'Listen ___ me, please.', o:['to','at','for','on'], a:'to', e:'listen <b>to</b> + algo o alguien.'},
+ {c:'d', s:'We are waiting ___ the results.', o:['for','to','at','about'], a:'for', e:'wait <b>for</b> (esperar algo o a alguien).'},
+ {c:'d', s:'I agree ___ you.', o:['with','to','at','for'], a:'with', e:'agree <b>with</b> + persona · agree <b>on</b> + un tema · agree <b>to</b> + una propuesta.'},
+ {c:'d', s:'Your phone is similar ___ mine.', o:['to','with','of','as'], a:'to', e:'similar <b>to</b>.'},
+ {c:'d', s:'This country is very different ___ mine.', o:['from','of','at','with'], a:'from', e:'different <b>from</b> (también se oye "different to/than").'},
+ {c:'d', s:'He applied ___ a job at a bank.', o:['for','to','at','on'], a:'for', e:'apply <b>for</b> + un puesto · apply <b>to</b> + una empresa.'},
+ {c:'d', s:'Water consists ___ hydrogen and oxygen.', o:['of','in','on','from'], a:'of', e:'consist <b>of</b> (estar compuesto de).'},
+ {c:'d', s:'She insisted ___ paying the bill.', o:['on','in','for','to'], a:'on', e:'insist <b>on</b> + -ing.'},
+ {c:'d', s:'This book belongs ___ my brother.', o:['to','of','for','at'], a:'to', e:'belong <b>to</b>.'},
+ {c:'d', s:'Chile is famous ___ its wine.', o:['for','of','by','about'], a:'for', e:'famous <b>for</b>.'},
+ {c:'d', s:'I am tired ___ hearing the same excuses.', o:['of','for','with','at'], a:'of', e:'tired <b>of</b> = harto de.'},
+ {c:'d', s:"I'm looking forward ___ seeing you.", o:['to','for','at','on'], a:'to', e:'look forward <b>to</b> + -ing. Aquí "to" es preposición, por eso sigue un gerund.'},
+ {c:'d', s:'She complained ___ the noise.', o:['about','for','to','on'], a:'about', e:'complain <b>about</b> algo · complain <b>to</b> alguien.'},
+ {c:'d', s:'He was accused ___ stealing.', o:['of','for','with','about'], a:'of', e:'accuse someone <b>of</b> + -ing.'},
+ {c:'d', s:'I paid ___ the tickets.', o:['for','to','on','with'], a:'for', e:'pay <b>for</b> algo.'}
+];
+
+/* ---------- DATA: Vocabulary ---------- */
+const VOC = [
+ // falsos amigos
+ {c:'f', w:'actually', m:'en realidad', trap:'actualmente', ex:'Actually, I prefer tea.'},
+ {c:'f', w:'currently', m:'actualmente', ex:'She is currently working from home.'},
+ {c:'f', w:'embarrassed', m:'avergonzado', trap:'embarazada', ex:'I was so embarrassed when I fell.'},
+ {c:'f', w:'pregnant', m:'embarazada', ex:'My sister is pregnant with twins.'},
+ {c:'f', w:'library', m:'biblioteca', trap:'librería', ex:'I borrowed this book from the library.'},
+ {c:'f', w:'sensible', m:'sensato', trap:'sensible', ex:'That is a sensible decision.'},
+ {c:'f', w:'carpet', m:'alfombra', trap:'carpeta', ex:'The carpet in the living room is new.'},
+ {c:'f', w:'attend', m:'asistir (a un evento)', trap:'atender', ex:'I will attend the conference next week.'},
+ {c:'f', w:'assist', m:'ayudar', trap:'asistir', ex:'Can I assist you with anything?'},
+ {c:'f', w:'realize', m:'darse cuenta', trap:'realizar', ex:"I didn't realize it was so late."},
+ {c:'f', w:'success', m:'éxito', trap:'suceso', ex:'The launch was a great success.'},
+ {c:'f', w:'exit', m:'salida', ex:'The exit is on the left.'},
+ {c:'f', w:'fabric', m:'tela', trap:'fábrica', ex:'This shirt is made of a soft fabric.'},
+ {c:'f', w:'eventually', m:'finalmente, con el tiempo', trap:'eventualmente', ex:'Eventually, he found a job.'},
+ {c:'f', w:'argument', m:'discusión, pelea', trap:'argumento (de una película)', ex:'They had an argument about money.'},
+ {c:'f', w:'lecture', m:'clase, conferencia', trap:'lectura', ex:'The professor gave a lecture on chemistry.'},
+ {c:'f', w:'resume', m:'reanudar', trap:'resumir', ex:'We will resume the meeting after lunch.'},
+ {c:'f', w:'parents', m:'padres', trap:'parientes', ex:'My parents live in the south.'},
+ {c:'f', w:'college', m:'universidad', trap:'colegio', ex:'She studied engineering in college.'},
+ {c:'f', w:'deception', m:'engaño', trap:'decepción', ex:'The whole story was a deception.'},
+ {c:'f', w:'record', m:'grabar', trap:'recordar', ex:'Can you record the meeting?'},
+ {c:'f', w:'sympathetic', m:'comprensivo', trap:'simpático', ex:'My boss was very sympathetic when I was ill.'},
+ {c:'f', w:'support', m:'apoyar', trap:'soportar (aguantar)', ex:'My family always supports me.'},
+ // trabajo
+ {c:'w', w:'deadline', m:'fecha límite', ex:'The deadline for the report is Friday.'},
+ {c:'w', w:'meeting', m:'reunión', ex:'We have a meeting at ten.'},
+ {c:'w', w:'supplier', m:'proveedor', ex:'We need a new supplier for this material.'},
+ {c:'w', w:'budget', m:'presupuesto', ex:'The project is over budget.'},
+ {c:'w', w:'to hire', m:'contratar', ex:'They want to hire two engineers.'},
+ {c:'w', w:'to fire', m:'despedir', ex:'He was fired for being late every day.'},
+ {c:'w', w:'skills', m:'habilidades', ex:'Communication skills are very important.'},
+ {c:'w', w:'achievement', m:'logro', ex:'Finishing the project on time was a big achievement.'},
+ {c:'w', w:'requirement', m:'requisito', ex:'English is a requirement for this job.'},
+ {c:'w', w:'feedback', m:'comentarios, retroalimentación', ex:'Thanks for your feedback on my presentation.'},
+ {c:'w', w:'to schedule', m:'agendar, programar', ex:"Let's schedule a call for Tuesday."},
+ {c:'w', w:'shipment', m:'envío, despacho', ex:'The shipment will arrive next week.'},
+ {c:'w', w:'sample', m:'muestra', ex:'Please send us a sample of the product.'},
+ {c:'w', w:'invoice', m:'factura', ex:'I will send you the invoice today.'},
+ {c:'w', w:'to improve', m:'mejorar', ex:'We need to improve our results.'},
+ {c:'w', w:'to approve', m:'aprobar', ex:'The manager approved the budget.'},
+ {c:'w', w:'issue', m:'problema, asunto', ex:'We have an issue with the software.'},
+ {c:'w', w:'goal', m:'meta, objetivo', ex:'Our goal is to grow ten percent this year.'},
+ {c:'w', w:'workload', m:'carga de trabajo', ex:'My workload is very heavy this month.'},
+ {c:'w', w:'warehouse', m:'bodega', ex:'The boxes are stored in the warehouse.'},
+ {c:'w', w:'lead time', m:'plazo de entrega', ex:'The lead time for this order is three weeks.'},
+ {c:'w', w:'to launch', m:'lanzar (un producto)', ex:'They will launch the new app in March.'},
+ {c:'w', w:'customer', m:'cliente', ex:'The customer is always right.'},
+ // phrasal verbs
+ {c:'p', w:'give up', m:'rendirse, dejar de', ex:"Don't give up, you're almost there."},
+ {c:'p', w:'look for', m:'buscar', ex:"I'm looking for my keys."},
+ {c:'p', w:'look after', m:'cuidar', ex:'Can you look after my dog this weekend?'},
+ {c:'p', w:'find out', m:'averiguar, enterarse', ex:'I need to find out what happened.'},
+ {c:'p', w:'turn down', m:'rechazar', ex:'She turned down the job offer.'},
+ {c:'p', w:'put off', m:'posponer', ex:"Don't put off until tomorrow what you can do today."},
+ {c:'p', w:'run out of', m:'quedarse sin', ex:'We ran out of coffee.'},
+ {c:'p', w:'get along with', m:'llevarse bien con', ex:'I get along with my coworkers.'},
+ {c:'p', w:'carry on', m:'continuar', ex:'Carry on, I am listening.'},
+ {c:'p', w:'figure out', m:'descifrar, entender', ex:"I can't figure out how this machine works."},
+ {c:'p', w:'set up', m:'instalar, organizar', ex:'We set up a new lab last year.'},
+ {c:'p', w:'come up with', m:'idear, ocurrírsele', ex:'She came up with a great idea.'},
+ {c:'p', w:'bring up', m:'mencionar (un tema)', ex:"Don't bring up politics at dinner."},
+ {c:'p', w:'call off', m:'cancelar', ex:'They called off the meeting.'},
+ {c:'p', w:'look up', m:'buscar (en un diccionario)', ex:'Look up the word in the dictionary.'},
+ {c:'p', w:'show up', m:'aparecer, llegar', ex:'He showed up two hours late.'},
+ {c:'p', w:'break down', m:'averiarse, descomponerse', ex:'My car broke down on the highway.'},
+ {c:'p', w:'make up', m:'inventar', ex:'He made up an excuse.'},
+ {c:'p', w:'point out', m:'señalar, hacer notar', ex:'She pointed out a mistake in the report.'},
+ {c:'p', w:'take off', m:'despegar', ex:'The plane takes off at six.'},
+ // útiles
+ {c:'u', w:'although', m:'aunque', ex:'Although it was raining, we went out.'},
+ {c:'u', w:'however', m:'sin embargo', ex:'The plan is good. However, it is expensive.'},
+ {c:'u', w:'meanwhile', m:'mientras tanto', ex:'Meanwhile, I will prepare dinner.'},
+ {c:'u', w:'therefore', m:'por lo tanto', ex:'It is late; therefore, we should go.'},
+ {c:'u', w:'whereas', m:'mientras que (contraste)', ex:'I like coffee, whereas my wife prefers tea.'},
+ {c:'u', w:'enough', m:'suficiente', ex:"We don't have enough time."},
+ {c:'u', w:'likely', m:'probable', ex:'It is likely to rain tomorrow.'},
+ {c:'u', w:'worth', m:'que vale la pena', ex:'This movie is worth watching.'},
+ {c:'u', w:'aware', m:'consciente', ex:'Are you aware of the risks?'},
+ {c:'u', w:'reliable', m:'confiable', ex:'He is a very reliable person.'},
+ {c:'u', w:'to borrow', m:'pedir prestado', ex:'Can I borrow your pen?'},
+ {c:'u', w:'to lend', m:'prestar', ex:'Can you lend me some money?'},
+ {c:'u', w:'to rent', m:'arrendar', ex:'We rent an apartment near the beach.'},
+ {c:'u', w:'to remind', m:'recordarle (a alguien)', ex:'Remind me to call my mother.'},
+ {c:'u', w:'to wonder', m:'preguntarse', ex:'I wonder what time it is.'},
+ {c:'u', w:'to avoid', m:'evitar', ex:'Try to avoid sugar.'},
+ {c:'u', w:'to spend', m:'gastar (dinero), pasar (tiempo)', ex:'I spent the weekend at home.'},
+ {c:'u', w:'to reach', m:'alcanzar, llegar a', ex:'We reached the top of the mountain.'},
+ {c:'u', w:'to own', m:'ser dueño de', ex:'She owns two restaurants.'},
+ {c:'u', w:'to fit', m:'quedar bien (ropa), caber', ex:"These shoes don't fit me."}
+];
+
+/* ---------- DATA: Caza de verbos ---------- */
+const HGER = [...new Set(VERBS.filter(v=>v.t==='ger').map(v=>v.v).concat(['appreciate','delay','discuss','dislike','quit','resist','involve','give up','look forward to',"can't help",'feel like','put off','carry on',"can't stand"]))];
+const HINF = [...new Set(VERBS.filter(v=>v.t==='inf').map(v=>v.v).concat(['arrange','attempt','choose','seem','tend','threaten','volunteer','wish','prepare','appear','claim','hesitate','would like','ask','wait']))];
+
+
+/* ---------- guías ---------- */
+const REF_VERBS = `
+  <h3>Solo gerund (verbo + -ing)</h3>
+  <p><code>enjoy</code> <code>avoid</code> <code>finish</code> <code>suggest</code> <code>mind</code> <code>consider</code> <code>practice</code> <code>miss</code> <code>keep</code> <code>postpone</code> <code>deny</code> <code>admit</code> <code>risk</code> <code>imagine</code> <code>recommend</code></p>
+  <h3>Solo infinitive (to + verbo)</h3>
+  <p><code>want</code> <code>decide</code> <code>hope</code> <code>plan</code> <code>agree</code> <code>refuse</code> <code>promise</code> <code>afford</code> <code>manage</code> <code>need</code> <code>expect</code> <code>fail</code> <code>learn</code> <code>offer</code> <code>pretend</code> <code>deserve</code></p>
+  <h3>Ambos, mismo significado</h3>
+  <p><code>like</code> <code>love</code> <code>hate</code> <code>prefer</code> <code>start</code> <code>continue</code></p>
+  <h3>Ambos, cambia el significado</h3>
+  <p><code>remember</code> <code>forget</code> <code>stop</code> <code>try</code> <code>regret</code></p>`;
+const REF_REL = `
+  <h3>who</h3><p>Personas. Es el <b>sujeto</b> de la acción: <i>The man who called...</i></p>
+  <h3>whom</h3><p>Personas. Es el <b>objeto</b>, sobre todo después de una preposición: <i>The man to whom I spoke...</i></p>
+  <h3>which</h3><p>Cosas y animales: <i>The book which I read...</i> / <i>the room in which...</i></p>
+  <h3>whose</h3><p>Posesión (cuyo / de quién), para personas y cosas: <i>The girl whose bike...</i></p>`;
+const REF_COND = `
+  <h3>Zero</h3><p><code>If + presente, presente</code> → hechos: <i>If you heat ice, it melts.</i></p>
+  <h3>First</h3><p><code>If + presente, will + verbo</code> → futuro posible: <i>If it rains, we will stay.</i></p>
+  <h3>Second</h3><p><code>If + pasado, would + verbo</code> → irreal ahora: <i>If I had money, I would buy it.</i></p>
+  <h3>Third</h3><p><code>If + had + participio, would have + participio</code> → irreal en el pasado: <i>If you had called, I would have helped.</i></p>
+  <h3>Mixed</h3><p><code>If + had + participio, would + verbo</code>: <i>If I had studied medicine, I would be a doctor now.</i></p>
+  <h3>Avanzado</h3>
+  <p><b>Inversion:</b> <i>Had I known…</i> · <i>Were I you…</i> · <i>Should you need…</i></p>
+  <p><b>unless</b> = if not · <b>as long as / provided</b> = siempre que · <b>in case</b> = por si acaso</p>
+  <p><b>But for / If it hadn't been for</b> = de no ser por · <b>otherwise</b> = de lo contrario</p>
+  <p><b>wish / if only</b> + pasado (presente) o + had + participio (pasado)</p>`;
+const REF_PREP = `
+  <h3>Tiempo</h3>
+  <p><code>at</code> horas y "at night" · <code>on</code> días y fechas · <code>in</code> meses, años, estaciones, partes del día</p>
+  <p><code>for</code> duración · <code>since</code> punto de inicio · <code>by</code> a más tardar · <code>until</code> hasta</p>
+  <h3>Lugar</h3>
+  <p><code>at</code> un punto (the door, the airport) · <code>on</code> una superficie o piso · <code>in</code> dentro, ciudades y países</p>
+  <h3>Con verbos y adjetivos</h3>
+  <p>interested <b>in</b> · good <b>at</b> · afraid <b>of</b> · depend <b>on</b> · married <b>to</b> · wait <b>for</b> · listen <b>to</b></p>`;
+
+/* ---------- modos ---------- */
+const MODES = {
+  verbs:{icon:'🔀', c:'#2457d6', title:'Gerund o infinitive', desc:'Marca qué oraciones son correctas', kind:'tf',
+    filters:[['all','Todos'],['ger','Solo -ing'],['inf','Solo to'],['both','Ambos']], ref:REF_VERBS,
+    items:f => VERBS.filter(x => f==='all' || (f==='both' ? (x.t==='both'||x.t==='diff') : x.t===f))},
+  hunt:{icon:'🎯', c:'#f97316', title:'Caza de verbos', desc:'Busca en una lista los que van con to o con -ing', kind:'hunt',
+    filters:[['inf','Buscar infinitive (to)'],['ger','Buscar gerund (-ing)']]},
+  rel:{icon:'🔗', c:'#0891b2', title:'Who, whom, which, whose', desc:'Pronombres relativos', kind:'mcq', ref:REF_REL, items:() => WQ},
+  cond:{icon:'🔮', c:'#8b5cf6', title:'If clauses', desc:'Condicionales, básico y avanzado', kind:'mcq',
+    filters:[['all','Todo'],['1','Básico'],['2','Avanzado']], ref:REF_COND,
+    items:f => CLQ_ALL.filter(q => f==='all' || String(q.lvl)===f)},
+  prep:{icon:'📍', c:'#16a34a', title:'Prepositions', desc:'in, on, at y verbo + preposición', kind:'mcq',
+    filters:[['all','Todas'],['t','Tiempo'],['p','Lugar'],['d','Verbo/adjetivo + prep.']], ref:REF_PREP,
+    items:f => PREP.filter(q => f==='all' || q.c===f)},
+  vocab:{icon:'📚', c:'#ec4899', title:'Vocabulary', desc:'Palabras nuevas con audio 🔊', kind:'mcq',
+    filters:[['all','Todas'],['f','Falsos amigos'],['w','Trabajo'],['p','Phrasal verbs'],['u','Útiles']],
+    items:f => VOC.filter(v => f==='all' || v.c===f), make:makeVocab}
+};
+const CLQ_ALL = CLQ.map(q => ({...q, lvl:1})).concat(CLQ2.map(q => ({...q, lvl:2})));
+
+/* ---------- helpers ---------- */
+const $app = document.getElementById('app');
+const $ = id => document.getElementById(id);
+const ROUND = 10;
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const uniq = a => [...new Set(a)];
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+};
+let S = null;
+
+function toTop(){
+  const go = () => {
+    try { window.scrollTo(0,0); } catch(e){}
+    try { document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch(e){}
+  };
+  go(); setTimeout(go, 60); setTimeout(go, 250);
+}
+function speak(t){
+  try {
+    const u = new SpeechSynthesisUtterance(t); u.lang = 'en-US'; u.rate = .9;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch(e){}
+}
+function confetti(){
+  try { if (matchMedia('(prefers-reduced-motion: reduce)').matches) return; } catch(e){}
+  const c = document.createElement('canvas'); c.className = 'confetti'; document.body.appendChild(c);
+  const dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+  c.width = W*dpr; c.height = H*dpr; c.style.width = W+'px'; c.style.height = H+'px';
+  const x = c.getContext('2d'); x.scale(dpr,dpr);
+  const cols = ['#2457d6','#16a34a','#f59e0b','#ec4899','#8b5cf6','#06b6d4','#f97316'];
+  const P = Array.from({length:150}, () => ({x:W/2+(Math.random()-.5)*W*.4, y:H*.4, vx:(Math.random()-.5)*13, vy:-Math.random()*15-5,
+    r:Math.random()*7+5, c:cols[Math.random()*cols.length|0], a:Math.random()*6, va:(Math.random()-.5)*.35}));
+  let t = 0;
+  (function f(){
+    x.clearRect(0,0,W,H);
+    P.forEach(p => { p.vy += .38; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va;
+      x.save(); x.translate(p.x,p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2); x.restore(); });
+    if (++t < 160) requestAnimationFrame(f); else c.remove();
+  })();
+}
+const sayBtn = (t, cls='') => t ? `<button class="say ${cls}" data-say="${encodeURIComponent(t)}" aria-label="Escuchar">🔊</button>` : '';
+
+/* ---------- inicio ---------- */
+function home(){
+  S = null; toTop();
+  const cards = Object.entries(MODES).map(([id,m],i) => {
+    const b = store.get('best_'+id);
+    const best = id==='hunt' ? (b!==null ? `⭐ Mejor: ${b} errores` : '') : (b ? `⭐ Mejor: ${b}/${ROUND}` : '');
+    return `<button class="card mode" data-go="${id}" style="--c:${m.c};--d:${i}">
+      <span class="ic">${m.icon}</span><span class="big">${m.title}</span><span class="desc">${m.desc}</span>
+      ${best ? `<span class="best">${best}</span>` : ''}</button>`;
+  }).join('');
+  $app.innerHTML = `<div class="hero"><h1>English Practice</h1><p class="sub">Elige qué practicar. Las respuestas se corrigen al instante.</p></div>
+    <div class="grid">${cards}</div>`;
+}
+
+function setup(){
+  const m = MODES[S.id];
+  $app.innerHTML = `
+    <div class="top"><button class="back" data-home>← Inicio</button></div>
+    <div class="mhead" style="--c:${m.c}"><span class="ic">${m.icon}</span><h1>${m.title}</h1></div>
+    <p class="sub">${m.kind==='hunt' ? '¿Qué verbos quieres cazar?' : 'Elige tema o nivel:'}</p>
+    <div class="chips">${m.filters.map(([k,l]) => `<button class="chip ${S.filter===k?'on':''}" data-filter="${k}">${l}</button>`).join('')}</div>
+    ${m.ref ? `<details><summary>Resumen rápido</summary><div class="ref">${m.ref}</div></details>` : ''}
+    <button class="primary" data-start>Empezar</button>`;
+}
+
+/* ---------- ronda ---------- */
+const rndOrder = () => Math.random()<.5 ? ['g','i'] : ['i','g'];
+function start(pool){
+  const m = MODES[S.id];
+  if (m.kind === 'hunt') return startHunt();
+  let list;
+  if (pool) list = pool.map(q => m.kind==='tf' ? {...q, order:rndOrder()} : {...q, o:shuffle(q.o)});
+  else list = shuffle(m.items(S.filter)).slice(0, ROUND)
+    .map(q => m.kind==='tf' ? {...q, order:rndOrder()} : (m.make ? m.make(q) : {...q, o:shuffle(q.o)}));
+  S = {id:S.id, filter:S.filter, list, score:0, done:0, misses:[], st:list.map(()=>({})), isRetry:!!pool, streak:0};
+  render(); toTop();
+}
+
+function sticky(){
+  return `<div class="sticky"><div class="top"><button class="back" data-home>← Salir</button>
+    <span class="pill"><span id="streak" class="streak"></span><span id="prog"></span></span></div>
+    <div class="bar"><i id="barfill"></i></div></div>`;
+}
+function render(){
+  const m = MODES[S.id];
+  const cards = S.list.map((q,i) => m.kind==='tf' ? card1(q,i) : card2(q,i)).join('');
+  const hint = m.kind==='tf' ? 'Toca ✓ o ✗ en cada oración.' : 'Toca la opción correcta.';
+  $app.innerHTML = `${sticky()}<p class="hint">${hint} La respuesta aparece al instante.</p>
+    ${m.ref ? `<details><summary>Ver guía rápida</summary><div class="ref">${m.ref}</div></details>` : ''}
+    ${cards}<div id="end"></div>`;
+  upd();
+}
+function upd(){
+  const n = S.list.length;
+  $('prog').textContent = `${S.done} / ${n} · ${S.score} ✓`;
+  requestAnimationFrame(() => { $('barfill').style.width = (S.done/n*100) + '%'; });
+  showStreak();
+}
+function showStreak(){ const st = $('streak'); if (st) st.textContent = S.streak >= 2 ? `🔥 ${S.streak}` : ''; }
+function hit(ok){
+  S.streak = ok ? S.streak + 1 : 0;
+  showStreak();
+  const st = $('streak');
+  if (ok && S.streak >= 2 && st){ st.classList.remove('bump'); void st.offsetWidth; st.classList.add('bump'); }
+}
+
+/* ----- verbos: correcta / incorrecta ----- */
+const TYPELABEL = {ger:'Solo gerund', inf:'Solo infinitive', both:'Ambos, mismo significado', diff:'Ambos, distinto significado'};
+function card1(q,i){
+  const rows = q.order.map(k => `
+    <div class="row" data-row="${k}">
+      <div class="sent">${q[k]}</div>
+      <div class="btns">
+        <button class="mk" data-mark="${k}" data-i="${i}" data-val="1">✓ Correcta</button>
+        <button class="mk" data-mark="${k}" data-i="${i}" data-val="0">✗ Incorrecta</button>
+      </div>
+      <div class="res"></div>
+    </div>`).join('');
+  return `<div class="card c" id="c${i}" style="--d:${i}">
+    <div class="vhead"><span class="verb">${q.v}</span><span class="tag" id="tag${i}" hidden></span></div>
+    ${rows}<div class="fbslot"></div></div>`;
+}
+function mark1(i, k, val){
+  const st = S.st[i]; if (k in st) return;
+  st[k] = val;
+  const q = S.list[i], truth = q[k+'Ok'], ok = val === truth;
+  const row = document.querySelector(`#c${i} [data-row="${k}"]`);
+  row.classList.add(ok ? 'right' : 'wrong', ok ? 'pop' : 'shake');
+  row.querySelectorAll('.mk').forEach(b => { b.disabled = true; b.classList.toggle('sel', b.dataset.val === String(val)); });
+  row.querySelector('.res').textContent = ok ? '✓ ¡Bien!' : '✗ Esta oración es ' + (truth ? 'correcta' : 'incorrecta');
+  hit(ok);
+  if ('g' in st && 'i' in st) finish1(i);
+}
+function finish1(i){
+  const q = S.list[i], st = S.st[i];
+  const all = st.g === q.gOk && st.i === q.iOk;
+  if (all) S.score++; else S.misses.push(q);
+  S.done++;
+  const tag = $('tag'+i); tag.textContent = TYPELABEL[q.t]; tag.hidden = false;
+  const good = q.t==='inf' ? q.i : q.g;
+  document.querySelector(`#c${i} .fbslot`).innerHTML = `
+    <div class="fb ${all?'ok':'bad'}">${sayBtn(good,'sm')}${q.e}${q.n ? `<div class="note">${q.n}</div>` : ''}</div>`;
+  $('c'+i).classList.add(all ? 'done-ok' : 'done-bad');
+  upd(); checkEnd();
+}
+
+/* ----- opción múltiple ----- */
+function card2(q,i){
+  const head = q.word
+    ? `<div class="wordrow"><span class="word">${q.word}</span>${sayBtn(q.say)}</div><p class="hint" style="margin:0 0 12px">${q.ask}</p>`
+    : `<div class="q">${q.s.replace('___', `<span class="blank" id="b${i}">&nbsp;&nbsp;&nbsp;</span>`)}</div>`;
+  return `<div class="card c" id="c${i}" style="--d:${i}">${head}
+    <div class="opts">${q.o.map((o,j) => `<button class="opt" data-i="${i}" data-j="${j}">${o}</button>`).join('')}</div>
+    <div class="fbslot"></div></div>`;
+}
+function pick2(i, j){
+  const st = S.st[i]; if ('a' in st) return;
+  const q = S.list[i], val = q.o[j]; st.a = val;
+  const ok = val === q.a;
+  if (ok) S.score++; else S.misses.push(q);
+  S.done++; hit(ok);
+  document.querySelectorAll(`#c${i} .opt`).forEach((b,k) => {
+    b.disabled = true;
+    if (q.o[k] === q.a) b.classList.add('ok', ...(ok ? ['pop'] : []));
+    else if (k === j) b.classList.add('bad', 'shake');
+  });
+  const bl = $('b'+i); if (bl){ bl.textContent = q.a; bl.classList.add(ok ? 'ok' : 'bad'); }
+  const sayTxt = q.sayEx || (q.s ? q.s.replace('___', q.a) : '');
+  document.querySelector(`#c${i} .fbslot`).innerHTML =
+    `<div class="fb ${ok?'ok':'bad'}">${sayBtn(sayTxt,'sm')}${ok ? '' : `<b class="t">Era: ${q.a}</b>`}${q.e}</div>`;
+  $('c'+i).classList.add(ok ? 'done-ok' : 'done-bad');
+  upd(); checkEnd();
+}
+
+/* ----- vocabulario ----- */
+function makeVocab(v){
+  const pool = shuffle(VOC.filter(x => x.c === v.c && x !== v));
+  const e = `<i>${v.ex}</i>${v.trap ? `<div class="note">⚠️ Falso amigo: <b>${v.w}</b> no significa “${v.trap}”.</div>` : ''}`;
+  const rev = `<b>${v.w}</b> = ${v.m}`;
+  if (Math.random() < .6){
+    const o = uniq([v.m, ...(v.trap ? [v.trap] : []), ...pool.map(x => x.m)]).slice(0,4);
+    return {word:v.w, say:v.w, ask:'¿Qué significa?', o:shuffle(o), a:v.m, e, sayEx:v.ex, rev};
+  }
+  const o = uniq([v.w, ...pool.map(x => x.w)]).slice(0,4);
+  return {word:v.m, say:null, ask:'¿Cómo se dice en inglés?', o:shuffle(o), a:v.w, e, sayEx:v.ex, rev};
+}
+
+/* ----- resultado ----- */
+function checkEnd(){
+  const n = S.list.length;
+  if (S.done < n) return;
+  const sc = S.score, m = MODES[S.id];
+  if (!S.isRetry){
+    const key = 'best_' + S.id, prev = parseInt(store.get(key) || '0', 10);
+    if (sc > prev) store.set(key, String(sc));
+  }
+  const msg = sc === n ? '¡Perfecto! 🏆' : sc >= n*0.8 ? '¡Muy bien! 🎉' : sc >= n*0.5 ? 'Vas bien, sigue practicando 💪' : 'A repasar, ¡tú puedes! 📖';
+  const rev = q => m.kind==='tf'
+    ? `<b>${q.v}</b> — ${q.t==='ger' ? 'gerund: '+q.g : q.t==='inf' ? 'infinitive: '+q.i : 'ambos: '+q.g+' / '+q.i}`
+    : (q.rev || q.s.replace('___', '<b>'+q.a+'</b>'));
+  const missHtml = S.misses.length ? `<h3 style="margin:16px 0 6px">Para repasar</h3>` + S.misses.map(q => `<div class="miss">${rev(q)}</div>`).join('') : '';
+  const end = $('end');
+  end.innerHTML = `
+    <div class="card center"><div class="score">${sc}/${n}</div><h2>${msg}</h2></div>
+    ${missHtml}
+    <div style="margin-top:16px">
+      ${S.misses.length ? `<button class="primary" data-retry>Repetir mis errores</button>` : ''}
+      <button class="${S.misses.length ? 'secondary' : 'primary'}" data-again>Nueva ronda</button>
+      <button class="secondary" data-home>Inicio</button>
+    </div>`;
+  setTimeout(() => { try { end.scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){} }, 350);
+  if (sc >= n*0.8) setTimeout(confetti, 500);
+}
+
+/* ---------- caza de verbos ---------- */
+function startHunt(){
+  const inf = S.filter === 'inf';
+  const T = shuffle(inf ? HINF : HGER).slice(0,8), D = shuffle(inf ? HGER : HINF).slice(0,8);
+  const chips = shuffle(T.map(v => ({v, ok:1})).concat(D.map(v => ({v, ok:0}))));
+  S = {id:'hunt', filter:S.filter, chips, found:0, errors:0, total:T.length, done:false, streak:0};
+  const lbl = inf ? 'INFINITIVE <small>(to + verbo)</small>' : 'GERUND <small>(verbo + -ing)</small>';
+  $app.innerHTML = `${sticky()}
+    <div class="card target">
+      <div class="tlabel">Toca todos los verbos que van con</div>
+      <div class="tbig">${lbl}</div>
+      <div class="tcount">🎯 <span id="hfound">0</span>/${S.total} encontrados · ❌ <span id="herr">0</span> errores</div>
+    </div>
+    <div class="hunt">${chips.map((c,i) => `<button class="hv" data-h="${i}" style="--d:${i}">${c.v}</button>`).join('')}</div>
+    <div id="end"></div>`;
+  huntUpd(); toTop();
+}
+function huntUpd(){
+  $('prog').textContent = `${S.found} / ${S.total}`;
+  $('hfound').textContent = S.found; $('herr').textContent = S.errors;
+  requestAnimationFrame(() => { $('barfill').style.width = (S.found/S.total*100) + '%'; });
+  showStreak();
+}
+function tapHunt(i){
+  const c = S.chips[i]; if (c.t || S.done) return;
+  c.t = 1;
+  const b = document.querySelector(`[data-h="${i}"]`); b.disabled = true;
+  if (c.ok){ b.classList.add('got','pop'); S.found++; hit(true); }
+  else {
+    b.classList.add('miss','shake'); S.errors++; hit(false);
+    b.innerHTML = `${c.v}<small>va con ${S.filter==='inf' ? '-ing' : 'to'}</small>`;
+  }
+  huntUpd();
+  if (S.found === S.total) huntEnd();
+}
+function huntEnd(){
+  S.done = true;
+  S.chips.forEach((c,i) => {
+    if (c.t) return;
+    const b = document.querySelector(`[data-h="${i}"]`);
+    b.disabled = true; b.classList.add('rest');
+    b.innerHTML = `${c.v}<small>${S.filter==='inf' ? '-ing' : 'to'}</small>`;
+  });
+  const e = S.errors;
+  const prev = store.get('best_hunt');
+  if (prev === null || e < parseInt(prev,10)) store.set('best_hunt', String(e));
+  const msg = e === 0 ? '¡Perfecto, sin errores! 🏆' : e <= 2 ? '¡Muy bien! 🎉' : 'Sigue practicando 💪';
+  const other = S.filter === 'inf' ? 'gerund (-ing)' : 'infinitive (to)';
+  $('end').innerHTML = `
+    <div class="card center"><div class="score">${e}</div><p class="hint" style="margin:0">errores</p><h2>${msg}</h2></div>
+    <button class="primary" data-again>Otra ronda</button>
+    <button class="secondary" data-switch>Ahora buscar ${other}</button>
+    <button class="secondary" data-home>Inicio</button>`;
+  setTimeout(() => { try { $('end').scrollIntoView({behavior:'smooth', block:'start'}); } catch(e){} }, 350);
+  if (e <= 1) setTimeout(confetti, 450);
+}
+
+/* ---------- eventos ---------- */
+$app.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  const d = t.dataset;
+  if (d.say !== undefined) return speak(decodeURIComponent(d.say));
+  if ('home' in d) return home();
+  if (d.go){ const m = MODES[d.go]; S = {id:d.go, filter:m.filters ? m.filters[0][0] : null}; return m.filters ? setup() : start(); }
+  if (d.filter){ S.filter = d.filter; return setup(); }
+  if ('start' in d) return start();
+  if (d.mark) return mark1(+d.i, d.mark, +d.val);
+  if (d.j !== undefined) return pick2(+d.i, +d.j);
+  if (d.h !== undefined) return tapHunt(+d.h);
+  if ('retry' in d) return start(shuffle(S.misses));
+  if ('again' in d) return start();
+  if ('switch' in d){ S.filter = S.filter === 'inf' ? 'ger' : 'inf'; return start(); }
+});
+
+home();
+</script>
+</body>
+</html>
