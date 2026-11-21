@@ -90,6 +90,8 @@ button{font:inherit}
 .row .btns{display:flex;gap:8px}
 .mk{flex:1;padding:8px 6px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;font-weight:600;cursor:pointer}
 .mk.sel{border-color:currentColor}
+.row.next{border-color:var(--accent);animation:glow 1.3s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 4px var(--accent-soft)}}
 .row.right{border-color:var(--ok);background:var(--ok-soft)}
 .row.wrong{border-color:var(--bad);background:var(--bad-soft)}
 .row .res{margin-top:6px;font-size:13.5px;font-weight:600}
@@ -569,8 +571,8 @@ const sayBtn = (t, cls='') => t ? `<button class="say ${cls}" data-say="${encode
 function home(){
   S = null; toTop();
   const cards = Object.entries(MODES).map(([id,m],i) => {
-    const b = store.get('best_'+id);
-    const best = id==='hunt' ? (b!==null ? `⭐ Mejor: ${b} errores` : '') : (b ? `⭐ Mejor: ${b}/${ROUND}` : '');
+    const b = store.get((m.kind==='tf' ? 'best2_' : 'best_')+id);
+    const best = id==='hunt' ? (b!==null ? `⭐ Mejor: ${b} errores` : '') : (b ? `⭐ Mejor: ${b}/${m.kind==='tf' ? ROUND*2 : ROUND}` : '');
     return `<button class="card mode" data-go="${id}" style="--c:${m.c};--d:${i}">
       <span class="ic">${m.icon}</span><span class="big">${m.title}</span><span class="desc">${m.desc}</span>
       ${best ? `<span class="best">${best}</span>` : ''}</button>`;
@@ -599,7 +601,7 @@ function start(pool){
   if (pool) list = pool.map(q => m.kind==='tf' ? {...q, order:rndOrder()} : {...q, o:shuffle(q.o)});
   else list = shuffle(m.items(S.filter)).slice(0, ROUND)
     .map(q => m.kind==='tf' ? {...q, order:rndOrder()} : (m.make ? m.make(q) : {...q, o:shuffle(q.o)}));
-  S = {id:S.id, filter:S.filter, list, score:0, done:0, misses:[], st:list.map(()=>({})), isRetry:!!pool, streak:0};
+  S = {id:S.id, filter:S.filter, list, total:list.length*(m.kind==='tf'?2:1), score:0, done:0, misses:[], st:list.map(()=>({})), isRetry:!!pool, streak:0};
   render(); toTop();
 }
 
@@ -611,14 +613,14 @@ function sticky(){
 function render(){
   const m = MODES[S.id];
   const cards = S.list.map((q,i) => m.kind==='tf' ? card1(q,i) : card2(q,i)).join('');
-  const hint = m.kind==='tf' ? 'Toca ✓ o ✗ en cada oración.' : 'Toca la opción correcta.';
+  const hint = m.kind==='tf' ? 'Marca <b>las dos oraciones</b> de cada verbo con ✓ o ✗.' : 'Toca la opción correcta.';
   $app.innerHTML = `${sticky()}<p class="hint">${hint} La respuesta aparece al instante.</p>
     ${m.ref ? `<details><summary>Ver guía rápida</summary><div class="ref">${m.ref}</div></details>` : ''}
-    ${cards}<div id="end"></div>`;
+    ${cards}<div id="end"><button class="secondary" data-finish>Terminar ronda</button></div>`;
   upd();
 }
 function upd(){
-  const n = S.list.length;
+  const n = S.total;
   $('prog').textContent = `${S.done} / ${n} · ${S.score} ✓`;
   requestAnimationFrame(() => { $('barfill').style.width = (S.done/n*100) + '%'; });
   showStreak();
@@ -655,20 +657,24 @@ function mark1(i, k, val){
   row.classList.add(ok ? 'right' : 'wrong', ok ? 'pop' : 'shake');
   row.querySelectorAll('.mk').forEach(b => { b.disabled = true; b.classList.toggle('sel', b.dataset.val === String(val)); });
   row.querySelector('.res').textContent = ok ? '✓ ¡Bien!' : '✗ Esta oración es ' + (truth ? 'correcta' : 'incorrecta');
+  S.done++; if (ok) S.score++; else st.wrong = 1;
   hit(ok);
+  const other = k === 'g' ? 'i' : 'g';
+  const orow = document.querySelector(`#c${i} [data-row="${other}"]`);
+  if (!(other in st)) orow.classList.add('next'); else orow.classList.remove('next');
   if ('g' in st && 'i' in st) finish1(i);
+  upd(); checkEnd();
 }
 function finish1(i){
   const q = S.list[i], st = S.st[i];
-  const all = st.g === q.gOk && st.i === q.iOk;
-  if (all) S.score++; else S.misses.push(q);
-  S.done++;
+  const all = !st.wrong;
+  if (!all) S.misses.push(q);
+  st.fin = 1;
   const tag = $('tag'+i); tag.textContent = TYPELABEL[q.t]; tag.hidden = false;
   const good = q.t==='inf' ? q.i : q.g;
   document.querySelector(`#c${i} .fbslot`).innerHTML = `
     <div class="fb ${all?'ok':'bad'}">${sayBtn(good,'sm')}${q.e}${q.n ? `<div class="note">${q.n}</div>` : ''}</div>`;
   $('c'+i).classList.add(all ? 'done-ok' : 'done-bad');
-  upd(); checkEnd();
 }
 
 /* ----- opción múltiple ----- */
@@ -713,12 +719,20 @@ function makeVocab(v){
 }
 
 /* ----- resultado ----- */
-function checkEnd(){
-  const n = S.list.length;
-  if (S.done < n) return;
-  const sc = S.score, m = MODES[S.id];
-  if (!S.isRetry){
-    const key = 'best_' + S.id, prev = parseInt(store.get(key) || '0', 10);
+function checkEnd(force){
+  const n = S.total, m = MODES[S.id];
+  if (!force && S.done < n) return;
+  if (force){
+    S.list.forEach((q,i) => {
+      const st = S.st[i];
+      const open = m.kind==='tf' ? !st.fin : !('a' in st);
+      if (open && !S.misses.includes(q)) S.misses.push(q);
+    });
+    document.querySelectorAll('.mk,.opt').forEach(b => b.disabled = true);
+  }
+  const sc = S.score;
+  if (!S.isRetry && !force){
+    const key = (m.kind==='tf' ? 'best2_' : 'best_') + S.id, prev = parseInt(store.get(key) || '0', 10);
     if (sc > prev) store.set(key, String(sc));
   }
   const msg = sc === n ? '¡Perfecto! 🏆' : sc >= n*0.8 ? '¡Muy bien! 🎉' : sc >= n*0.5 ? 'Vas bien, sigue practicando 💪' : 'A repasar, ¡tú puedes! 📖';
@@ -808,6 +822,7 @@ $app.addEventListener('click', e => {
   if (d.mark) return mark1(+d.i, d.mark, +d.val);
   if (d.j !== undefined) return pick2(+d.i, +d.j);
   if (d.h !== undefined) return tapHunt(+d.h);
+  if ('finish' in d) return checkEnd(true);
   if ('retry' in d) return start(shuffle(S.misses));
   if ('again' in d) return start();
   if ('switch' in d){ S.filter = S.filter === 'inf' ? 'ger' : 'inf'; return start(); }
