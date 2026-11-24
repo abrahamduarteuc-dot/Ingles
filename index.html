@@ -139,6 +139,13 @@ summary{cursor:pointer;font-weight:700;color:var(--accent);padding:8px 0}
 .hv.rest{opacity:.5}
 .hv small{display:block;font-size:11px;font-weight:700;opacity:.85;margin-top:2px}
 .hv:disabled{cursor:default}
+.scale{display:flex;flex-direction:column;gap:6px;margin:6px 0}
+.lvl{border-left:5px solid var(--lc);background:var(--bg);border-radius:8px;padding:8px 10px}
+.lvl b{display:block;font-size:15px;color:var(--lc)}
+.lvl span{display:block;font-size:14px}
+.lvl i{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.l1{--lc:#16a34a}.l2{--lc:#d97706}.l3{--lc:#dc2626}.l4{--lc:#7c3aed}.l5{--lc:#0891b2}
+.tip{margin-top:10px!important;padding:8px 10px;background:var(--warn-soft);border-radius:8px}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:99}
 </style>
 </head>
@@ -468,6 +475,57 @@ const HGER = [...new Set(VERBS.filter(v=>v.t==='ger').map(v=>v.v).concat(['appre
 const HINF = [...new Set(VERBS.filter(v=>v.t==='inf').map(v=>v.v).concat(['arrange','attempt','choose','seem','tend','threaten','volunteer','wish','prepare','appear','claim','hesitate','would like','ask','wait']))];
 
 
+/* ---------- DATA: Modal perfects ---------- */
+const MD = '<b>must have</b> + participio = casi seguro que pasó (deducción con evidencia).';
+const MN = '<b>can\'t have</b> + participio = imposible que haya pasado. (No se usa "mustn\'t have" para esto.)';
+const MM = '<b>might / may have</b> + participio = quizás pasó, no estás seguro.';
+const MS = '<b>should have</b> + participio = debería haber… pero NO lo hizo (reproche o arrepentimiento).';
+const MSN = '<b>shouldn\'t have</b> + participio = no debería haber… pero SÍ lo hizo.';
+const MC = '<b>could have</b> + participio = podría haber… pero no pasó (oportunidad perdida o peligro que no ocurrió).';
+const MODQ = [
+ {c:'d', s:'The streets are wet. It ___ rained last night.', o:['must have','can\'t have','should have','shouldn\'t have'], a:'must have', e:MD+' Las calles mojadas son la evidencia.'},
+ {c:'d', s:"She's always so friendly, but she didn't say hello. She ___ seen me.", o:["can't have",'must have','should have','would have'], a:"can't have", e:MN},
+ {c:'d', s:'He ___ stolen the money. He was with me all night.', o:["can't have",'must have','should have','might have'], a:"can't have", e:MN+' Estaba contigo: es imposible.'},
+ {c:'d', s:"I can't find my keys. I ___ left them at the office, but I'm not sure.", o:['might have','must have',"can't have",'should have'], a:'might have', e:MM+' La pista es "I\'m not sure".'},
+ {c:'d', s:'You look exhausted. You ___ worked very hard today.', o:['must have',"can't have","shouldn't have",'would have'], a:'must have', e:MD},
+ {c:'d', s:"Tom isn't answering. He ___ gone to bed early, or maybe he's out.", o:['might have','must have',"can't have",'should have'], a:'might have', e:MM+' "or maybe" muestra que no hay certeza.'},
+ {c:'d', s:"The window is broken and there's a ball on the floor. Someone ___ thrown it through the window.", o:['must have',"can't have",'should have',"shouldn't have"], a:'must have', e:MD},
+ {c:'d', s:"That ___ been Ana you saw in Paris. She's in Chile this week.", o:["can't have",'must have','should have','would have'], a:"can't have", e:MN},
+ {c:'d', s:"I'm not sure where Pedro is. He ___ missed the bus.", o:['may have','must have',"can't have",'should have'], a:'may have', e:MM},
+ {c:'d', s:"You ___ met my brother at the party. He wasn't there.", o:["can't have",'must have','might have','should have'], a:"can't have", e:MN},
+ {c:'d', s:'The cake is gone and the dog looks very happy. The dog ___ eaten it!', o:['must have',"can't have",'should have',"shouldn't have"], a:'must have', e:MD},
+ {c:'d', s:'Her English is perfect. She ___ lived in the US for years.', o:['must have','should have',"can't have","shouldn't have"], a:'must have', e:MD},
+ {c:'d', s:'He looks totally relaxed. He ___ heard the bad news yet.', o:["can't have",'must have','should have','could have'], a:"can't have", e:MN},
+ {c:'d', s:"I don't know why she's late. She ___ got stuck in traffic.", o:['might have','must have',"can't have",'should have'], a:'might have', e:MM},
+ {c:'s', s:'I failed the exam. I ___ studied more.', o:['should have','must have',"can't have",'might have'], a:'should have', e:MS+' No estudiaste lo suficiente y te arrepientes.'},
+ {c:'s', s:'You ___ told her the secret. Now everyone knows!', o:["shouldn't have","can't have","mustn't have","couldn't have"], a:"shouldn't have", e:MSN+' Se lo contaste y fue un error.'},
+ {c:'s', s:"We're lost. We ___ brought a map.", o:['should have','must have',"can't have",'may have'], a:'should have', e:MS},
+ {c:'s', s:'I ate too much. I ___ had that second pizza.', o:["shouldn't have","can't have","mustn't have","might not have"], a:"shouldn't have", e:MSN},
+ {c:'s', s:'The meeting was at 9 and you arrived at 10. You ___ been on time.', o:['should have','must have',"can't have",'might have'], a:'should have', e:MS},
+ {c:'s', s:'He ___ driven so fast. That is why he crashed.', o:["shouldn't have","can't have","couldn't have","might not have"], a:"shouldn't have", e:MSN},
+ {c:'s', s:'You ___ called me! I was so worried.', o:['should have','must have',"can't have",'might have'], a:'should have', e:MS},
+ {c:'o', s:"Why didn't you ask me? I ___ helped you.", o:['could have','must have',"can't have","shouldn't have"], a:'could have', e:MC+' Habrías podido ayudar, pero no te pidieron.'},
+ {c:'o', s:'Be careful! You ___ fallen and broken your leg!', o:['could have','must have','should have',"can't have"], a:'could have', e:MC+' Era un peligro que por suerte no pasó.'},
+ {c:'o', s:'She ___ been a great pianist, but she chose medicine.', o:['could have','must have',"can't have","shouldn't have"], a:'could have', e:MC},
+ {c:'o', s:"We ___ won the match if our best player hadn't been injured.", o:['could have','must have',"can't have","mustn't have"], a:'could have', e:MC+' Se combina muy bien con el third conditional.'},
+ {c:'o', s:'I ___ gone to the party, but I was too tired.', o:['could have','must have',"can't have","shouldn't have"], a:'could have', e:MC}
+];
+const REF_MODAL = `
+  <p>Fórmula: <code>modal + have + participio</code> → habla del <b>pasado</b>.</p>
+  <h3>1 · ¿Qué tan seguro estás de que pasó?</h3>
+  <div class="scale">
+    <div class="lvl l1"><b>must have</b><span>✅ Seguro que sí: “seguro que…”</span><i>The streets are wet. It must have rained.</i></div>
+    <div class="lvl l2"><b>might / may / could have</b><span>🤔 Quizás: “a lo mejor…”</span><i>He might have missed the bus.</i></div>
+    <div class="lvl l3"><b>can't / couldn't have</b><span>❌ Imposible: “no puede ser que…”</span><i>He can't have stolen it, he was with me.</i></div>
+  </div>
+  <h3>2 · Lo que debió pasar o pudo pasar (y no pasó)</h3>
+  <div class="scale">
+    <div class="lvl l4"><b>should have</b><span>😔 “Debí / debiste…” (pero no lo hiciste)</span><i>I should have studied more.</i></div>
+    <div class="lvl l4"><b>shouldn't have</b><span>🙈 “No debí…” (pero lo hiciste)</span><i>I shouldn't have eaten so much.</i></div>
+    <div class="lvl l5"><b>could have</b><span>💡 “Podría haber…” (pero no pasó)</span><i>I could have helped you. Why didn't you ask?</i></div>
+  </div>
+  <p class="tip">Truco: <b>must / might / can't</b> = detective 🕵️ (adivinas qué pasó). <b>should / could</b> = mirar atrás 🔙 (lo que debió o pudo ser).</p>`;
+
 /* ---------- guías ---------- */
 const REF_VERBS = `
   <h3>Solo gerund (verbo + -ing)</h3>
@@ -514,6 +572,9 @@ const MODES = {
   cond:{icon:'🔮', c:'#8b5cf6', title:'If clauses', desc:'Condicionales, básico y avanzado', kind:'mcq',
     filters:[['all','Todo'],['1','Básico'],['2','Avanzado']], ref:REF_COND,
     items:f => CLQ_ALL.filter(q => f==='all' || String(q.lvl)===f)},
+  modal:{icon:'🕵️', c:'#0d9488', title:'Must / should / could have', desc:'Deducir y lamentar el pasado', kind:'mcq',
+    filters:[['all','Todos'],['d','Deducción: must / might / can\'t'],['s','Reproche: should'],['o','Oportunidad: could']], ref:REF_MODAL, refOpen:true,
+    items:f => MODQ.filter(q => f==='all' || q.c===f)},
   prep:{icon:'📍', c:'#16a34a', title:'Prepositions', desc:'in, on, at y verbo + preposición', kind:'mcq',
     filters:[['all','Todas'],['t','Tiempo'],['p','Lugar'],['d','Verbo/adjetivo + prep.']], ref:REF_PREP,
     items:f => PREP.filter(q => f==='all' || q.c===f)},
@@ -588,7 +649,7 @@ function setup(){
     <div class="mhead" style="--c:${m.c}"><span class="ic">${m.icon}</span><h1>${m.title}</h1></div>
     <p class="sub">${m.kind==='hunt' ? '¿Qué verbos quieres cazar?' : 'Elige tema o nivel:'}</p>
     <div class="chips">${m.filters.map(([k,l]) => `<button class="chip ${S.filter===k?'on':''}" data-filter="${k}">${l}</button>`).join('')}</div>
-    ${m.ref ? `<details><summary>Resumen rápido</summary><div class="ref">${m.ref}</div></details>` : ''}
+    ${m.ref ? `<details ${m.refOpen ? 'open' : ''}><summary>Resumen rápido</summary><div class="ref">${m.ref}</div></details>` : ''}
     <button class="primary" data-start>Empezar</button>`;
 }
 
