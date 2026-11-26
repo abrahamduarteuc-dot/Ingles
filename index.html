@@ -146,6 +146,22 @@ summary{cursor:pointer;font-weight:700;color:var(--accent);padding:8px 0}
 .lvl i{display:block;font-size:13px;color:var(--muted);margin-top:2px}
 .l1{--lc:#16a34a}.l2{--lc:#d97706}.l3{--lc:#dc2626}.l4{--lc:#7c3aed}.l5{--lc:#0891b2}
 .tip{margin-top:10px!important;padding:8px 10px;background:var(--warn-soft);border-radius:8px}
+.inp{display:block;width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;margin-bottom:10px;resize:vertical}
+.inp:focus{outline:none;border-color:var(--accent)}
+.nform h2{margin-bottom:12px}
+.ni{padding:12px 14px;margin-bottom:10px;animation:rise .35s both;animation-delay:calc(var(--d,0)*40ms)}
+.niw{display:flex;align-items:center;gap:8px;font-size:18px}
+.niw .say.sm{float:none;margin:0}
+.nim{font-size:15px;margin-top:2px}
+.nin{font-size:13.5px;color:var(--muted);font-style:italic;margin-top:4px;white-space:pre-wrap}
+.nibar{display:flex;align-items:center;gap:8px;margin-top:8px}
+.nid{font-size:12px;color:var(--muted)}
+.ib{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 10px;cursor:pointer;font-size:14px}
+.ib.danger{background:var(--bad);border-color:var(--bad);color:#fff}
+.nconf{margin-top:8px;padding:8px 10px;background:var(--bad-soft);border-radius:10px;font-size:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filelbl{display:block;text-align:center}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:600;font-size:14px;z-index:100;animation:rise .25s both;transition:opacity .4s}
+.toast.out{opacity:0}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:99}
 </style>
 </head>
@@ -578,6 +594,8 @@ const MODES = {
   prep:{icon:'📍', c:'#16a34a', title:'Prepositions', desc:'in, on, at y verbo + preposición', kind:'mcq',
     filters:[['all','Todas'],['t','Tiempo'],['p','Lugar'],['d','Verbo/adjetivo + prep.']], ref:REF_PREP,
     items:f => PREP.filter(q => f==='all' || q.c===f)},
+  notes:{icon:'📝', c:'#d97706', title:'Mis expresiones', desc:'Guarda lo que veas en redes y practícalo', kind:'notes'},
+  mine:{hidden:true, icon:'🎯', c:'#d97706', title:'Mis expresiones', kind:'mcq', items:() => (nLoad() || []).filter(x => x.m), make:makeMine},
   vocab:{icon:'📚', c:'#ec4899', title:'Vocabulary', desc:'Palabras nuevas con audio 🔊', kind:'mcq',
     filters:[['all','Todas'],['f','Falsos amigos'],['w','Trabajo'],['p','Phrasal verbs'],['u','Útiles']],
     items:f => VOC.filter(v => f==='all' || v.c===f), make:makeVocab}
@@ -628,10 +646,120 @@ function confetti(){
 }
 const sayBtn = (t, cls='') => t ? `<button class="say ${cls}" data-say="${encodeURIComponent(t)}" aria-label="Escuchar">🔊</button>` : '';
 
+/* ---------- Mis expresiones (guardadas en el teléfono) ---------- */
+const NKEY = 'myExpr';
+const NTYPES = [['frase','Frase'],['modal','Modal verb'],['phrasal','Phrasal verb'],['otra','Otra']];
+const NTL = Object.fromEntries(NTYPES);
+const escH = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function nLoad(){ try { return JSON.parse(localStorage.getItem(NKEY) || '[]'); } catch(e){ return null; } }
+function nSave(a){ try { localStorage.setItem(NKEY, JSON.stringify(a)); return true; } catch(e){ return false; } }
+function toast(t){
+  const d = document.createElement('div'); d.className = 'toast'; d.textContent = t; document.body.appendChild(d);
+  setTimeout(() => d.classList.add('out'), 1700); setTimeout(() => d.remove(), 2200);
+}
+function notes(){
+  if (!S || S.id !== 'notes') S = {id:'notes', nf:'all', q:'', edit:null, del:null, type:'frase'};
+  const all = nLoad(), list = all || [];
+  const e = S.edit ? list.find(x => x.id === S.edit) : null;
+  if (e) S.type = e.t;
+  const canPractice = list.filter(x => x.m).length >= 4;
+  $app.innerHTML = `
+    <div class="top"><button class="back" data-home>← Inicio</button></div>
+    <div class="mhead" style="--c:#d97706"><span class="ic">📝</span><h1>Mis expresiones</h1></div>
+    <p class="sub">Guarda frases, modal verbs y phrasal verbs que veas en Instagram o internet. Quedan guardadas en este teléfono.</p>
+    ${all === null ? '<div class="note">Este navegador no permite guardar datos. Ábrelo desde Safari o desde el ícono en tu pantalla de inicio.</div>' : ''}
+    <div class="card nform">
+      <h2>${e ? '✏️ Editar expresión' : '➕ Nueva expresión'}</h2>
+      <input id="nw" class="inp" autocomplete="off" autocapitalize="off" placeholder="En inglés (ej: I'm on it)" value="${escH(e && e.w)}">
+      <input id="nm" class="inp" autocomplete="off" placeholder="Qué significa (ej: me encargo)" value="${escH(e && e.m)}">
+      <div class="chips" style="margin-bottom:10px">${NTYPES.map(([k,l]) => `<button class="chip ${S.type===k?'on':''}" data-ntype="${k}">${l}</button>`).join('')}</div>
+      <textarea id="nn" class="inp" rows="2" placeholder="Ejemplo o nota (opcional): dónde la viste, una oración…">${escH(e && e.n)}</textarea>
+      <button class="primary" data-nsave>${e ? 'Guardar cambios' : 'Guardar'}</button>
+      ${e ? '<button class="secondary" data-ncancel>Cancelar</button>' : ''}
+    </div>
+    ${canPractice ? '<button class="primary" data-npractice style="margin-bottom:16px">🎯 Practicar mis expresiones</button>'
+                  : '<p class="hint">Cuando tengas 4 o más con significado, podrás practicarlas con preguntas.</p>'}
+    <h2 style="margin:6px 0 10px">Guardadas (${list.length})</h2>
+    <input id="nq" class="inp" autocomplete="off" placeholder="🔍 Buscar…" value="${escH(S.q)}">
+    <div class="chips">${[['all','Todas'], ...NTYPES].map(([k,l]) => `<button class="chip ${S.nf===k?'on':''}" data-nf="${k}">${l}</button>`).join('')}</div>
+    <div id="nlist"></div>
+    <details style="margin-top:18px"><summary>💾 Respaldo (exportar / importar)</summary>
+      <div class="ref">
+        <p style="margin:8px 0">Guarda una copia de vez en cuando por si cambias de teléfono o se borran los datos del navegador.</p>
+        <button class="secondary" data-nexp>⬇️ Descargar respaldo (archivo)</button>
+        <button class="secondary" data-ncopy>📋 Copiar respaldo como texto</button>
+        <h3>Importar</h3>
+        <label class="secondary filelbl">📂 Elegir archivo de respaldo<input type="file" id="nfile" accept=".json,application/json,text/plain" hidden></label>
+        <textarea id="nimp" class="inp" rows="3" placeholder="…o pega aquí el texto del respaldo" style="margin-top:8px"></textarea>
+        <button class="secondary" data-nimp>Importar texto pegado</button>
+      </div>
+    </details>`;
+  nList();
+}
+function nList(){
+  const list = nLoad() || [], q = S.q.toLowerCase();
+  const shown = list.filter(x => (S.nf==='all' || x.t===S.nf) && (!q || `${x.w} ${x.m} ${x.n||''}`.toLowerCase().includes(q)))
+    .sort((a,b) => b.d - a.d);
+  $('nlist').innerHTML = shown.length ? shown.map((x,i) => `
+    <div class="card ni" style="--d:${Math.min(i,8)}">
+      <div class="niw"><b>${escH(x.w)}</b>${sayBtn(x.w,'sm')}</div>
+      ${x.m ? `<div class="nim">${escH(x.m)}</div>` : ''}
+      ${x.n ? `<div class="nin">${escH(x.n)}</div>` : ''}
+      <div class="nibar"><span class="tag">${NTL[x.t] || 'Otra'}</span><span class="nid">${new Date(x.d).toLocaleDateString('es-CL')}</span>
+        <span style="flex:1"></span><button class="ib" data-nedit="${x.id}">✏️</button><button class="ib" data-ndel="${x.id}">🗑️</button></div>
+      ${S.del === x.id ? `<div class="nconf">¿Borrar esta expresión? <button class="ib danger" data-nconfirm="${x.id}">Sí, borrar</button><button class="ib" data-nkeep>No</button></div>` : ''}
+    </div>`).join('')
+    : `<p class="hint">${list.length ? 'Nada coincide con la búsqueda.' : 'Todavía no guardas expresiones. ¡Agrega la primera arriba!'}</p>`;
+}
+function nSaveForm(){
+  const w = $('nw').value.trim(), m = $('nm').value.trim(), n = $('nn').value.trim();
+  if (!w){ $('nw').classList.add('shake'); setTimeout(() => $('nw').classList.remove('shake'), 400); $('nw').focus(); return; }
+  const list = nLoad() || [];
+  if (S.edit){ const x = list.find(y => y.id === S.edit); if (x) Object.assign(x, {w, m, n, t:S.type}); }
+  else list.push({id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), w, m, n, t:S.type, d:Date.now()});
+  if (!nSave(list)) return toast('⚠️ No se pudo guardar');
+  toast(S.edit ? 'Cambios guardados ✓' : 'Guardada ✓');
+  S.edit = null; S.q = ''; notes();
+}
+function nImport(text){
+  let arr;
+  try { arr = JSON.parse(text); if (!Array.isArray(arr)) throw 0; } catch(e){ return toast('⚠️ El respaldo no es válido'); }
+  const list = nLoad() || [];
+  const ids = new Set(list.map(x => x.id)), words = new Set(list.map(x => x.w.toLowerCase()));
+  let added = 0;
+  arr.forEach(x => {
+    if (!x || !x.w || ids.has(x.id) || words.has(String(x.w).toLowerCase())) return;
+    list.push({id: x.id || Date.now().toString(36)+Math.random().toString(36).slice(2,6), w:String(x.w), m:String(x.m||''), n:String(x.n||''), t: NTL[x.t] ? x.t : 'otra', d: +x.d || Date.now()});
+    ids.add(x.id); words.add(String(x.w).toLowerCase()); added++;
+  });
+  nSave(list); toast(`Importadas ${added} expresiones ✓`); notes();
+}
+function nExport(){
+  const json = JSON.stringify(nLoad() || [], null, 1);
+  try {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([json], {type:'application/json'}));
+    a.download = 'mis-expresiones-' + new Date().toISOString().slice(0,10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('Respaldo descargado ✓');
+  } catch(e){ toast('Usa "Copiar respaldo como texto"'); }
+}
+function makeMine(v){
+  const pool = shuffle((nLoad() || []).filter(x => x.m && x.id !== v.id));
+  const e = v.n ? `<i>${escH(v.n)}</i>` : '';
+  const rev = `<b>${escH(v.w)}</b> = ${escH(v.m)}`;
+  if (Math.random() < .65){
+    const o = uniq([v.m, ...pool.map(x => x.m)]).slice(0,4);
+    return {word:escH(v.w), say:v.w, ask:'¿Qué significa?', o:shuffle(o), a:v.m, e, sayEx:v.w, rev};
+  }
+  const o = uniq([v.w, ...pool.map(x => x.w)]).slice(0,4);
+  return {word:escH(v.m), say:null, ask:'¿Cómo se dice en inglés?', o:shuffle(o), a:v.w, e, sayEx:v.w, rev};
+}
+
 /* ---------- inicio ---------- */
 function home(){
   S = null; toTop();
-  const cards = Object.entries(MODES).map(([id,m],i) => {
+  const cards = Object.entries(MODES).filter(([,m]) => !m.hidden).map(([id,m],i) => {
     const b = store.get((m.kind==='tf' ? 'best2_' : 'best_')+id);
     const best = id==='hunt' ? (b!==null ? `⭐ Mejor: ${b} errores` : '') : (b ? `⭐ Mejor: ${b}/${m.kind==='tf' ? ROUND*2 : ROUND}` : '');
     return `<button class="card mode" data-go="${id}" style="--c:${m.c};--d:${i}">
@@ -877,6 +1005,19 @@ $app.addEventListener('click', e => {
   const d = t.dataset;
   if (d.say !== undefined) return speak(decodeURIComponent(d.say));
   if ('home' in d) return home();
+  if (d.ntype){ S.type = d.ntype; document.querySelectorAll('[data-ntype]').forEach(b => b.classList.toggle('on', b === t)); return; }
+  if (d.nf){ S.nf = d.nf; document.querySelectorAll('[data-nf]').forEach(b => b.classList.toggle('on', b === t)); return nList(); }
+  if ('nsave' in d) return nSaveForm();
+  if ('ncancel' in d){ S.edit = null; return notes(); }
+  if (d.nedit){ S.edit = d.nedit; S.del = null; notes(); toTop(); return; }
+  if (d.ndel){ S.del = d.ndel; return nList(); }
+  if ('nkeep' in d){ S.del = null; return nList(); }
+  if (d.nconfirm){ nSave((nLoad() || []).filter(x => x.id !== d.nconfirm)); S.del = null; toast('Borrada'); return notes(); }
+  if ('nexp' in d) return nExport();
+  if ('ncopy' in d){ const j = JSON.stringify(nLoad() || []); try { navigator.clipboard.writeText(j).then(() => toast('Copiado ✓'), () => { $('nimp').value = j; toast('Cópialo desde el cuadro de texto'); }); } catch(e){ $('nimp').value = j; } return; }
+  if ('nimp' in d) return nImport($('nimp').value);
+  if ('npractice' in d){ S = {id:'mine', filter:null}; return start(); }
+  if (d.go && MODES[d.go].kind === 'notes'){ S = null; notes(); toTop(); return; }
   if (d.go){ const m = MODES[d.go]; S = {id:d.go, filter:m.filters ? m.filters[0][0] : null}; return m.filters ? setup() : start(); }
   if (d.filter){ S.filter = d.filter; return setup(); }
   if ('start' in d) return start();
@@ -887,6 +1028,12 @@ $app.addEventListener('click', e => {
   if ('retry' in d) return start(shuffle(S.misses));
   if ('again' in d) return start();
   if ('switch' in d){ S.filter = S.filter === 'inf' ? 'ger' : 'inf'; return start(); }
+});
+
+$app.addEventListener('input', e => { if (e.target.id === 'nq'){ S.q = e.target.value; nList(); } });
+$app.addEventListener('change', e => {
+  if (e.target.id !== 'nfile' || !e.target.files[0]) return;
+  const r = new FileReader(); r.onload = () => nImport(r.result); r.readAsText(e.target.files[0]);
 });
 
 home();
